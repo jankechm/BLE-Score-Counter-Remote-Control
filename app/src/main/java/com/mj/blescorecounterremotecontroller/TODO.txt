@@ -1,0 +1,8 @@
+
+- Create Settings in top panel
+	- Add option to specify if the app should automatically connect to lastly connected BT device on startup.
+
+- Separate Connect and Disconnect buttons. View them only when needed (Connect, if some device is highlighted,
+  Disconnect if already connected to some device).
+- One button for Scan and Stop Scan.
+- RecyclerView for found devices.

@@ -32,42 +32,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     // TODO add filtering on name
-    private val scanFilter = ScanFilter.Builder()
-        .build()
+//    private val scanFilter = ScanFilter.Builder()
+//        .build()
+//
+//    private val scanSettings = ScanSettings.Builder()
+//        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+//        // TODO Enable after testing W/ and W/O
+////        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
+//        .build()
+//
+//    private val scanCallback = object : ScanCallback() {
+//        @SuppressLint("MissingPermission")
+//        override fun onScanResult(callbackType: Int, result: ScanResult) {
+//            super.onScanResult(callbackType, result)
+//
+//            if (scanResults.none { it.device.address == result.device.address
+//                        // TODO remove the name comparison, when filtering on name applied
+//                        && it.device.name == result.device.name
+//            }) {
+//                with(result.device) {
+//                    var msg = "Found BLE device! Name: ${name ?: "Unnamed"}, address: $address, UUIDS:"
+//                    // TODO Maybe change uuids to result.scanRecord.serviceUuids
+//                    uuids.forEachIndexed { i, parcelUUid ->
+//                        msg += "\n${i+1}: ${parcelUUid.uuid}"
+//                    }
+//                    Log.i(Constants.BT_TAG, msg)
+//                }
+//                scanResults.add(result)
+//            }
+//        }
+//
+//        override fun onScanFailed(errorCode: Int) {
+//            Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
+//        }
+//    }
 
-    private val scanSettings = ScanSettings.Builder()
-        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-        // TODO Enable after testing W/ and W/O
-//        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
-        .build()
-
-    private val scanCallback = object : ScanCallback() {
-        @SuppressLint("MissingPermission")
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            super.onScanResult(callbackType, result)
-
-            if (scanResults.none { it.device.address == result.device.address
-                        // TODO remove the name comparison, when filtering on name applied
-                        && it.device.name == result.device.name
-            }) {
-                with(result.device) {
-                    var msg = "Found BLE device! Name: ${name ?: "Unnamed"}, address: $address, UUIDS:"
-                    // TODO Maybe change uuids to result.scanRecord.serviceUuids
-                    uuids.forEachIndexed { i, parcelUUid ->
-                        msg += "\n${i+1}: ${parcelUUid.uuid}"
-                    }
-                    Log.i(Constants.BT_TAG, msg)
-                }
-                scanResults.add(result)
-            }
-        }
-
-        override fun onScanFailed(errorCode: Int) {
-            Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
-        }
-    }
-
-    private val scanResults = mutableListOf<ScanResult>()
+//    private val scanResults = mutableListOf<ScanResult>()
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
     private var scanning = false
@@ -146,12 +146,14 @@ class MainActivity : AppCompatActivity() {
         // else {
             if (this.isBleSupported()) {
                 if (this.hasBtPermissions()) {
-                    this.promptEnableBluetooth()
+//                    this.promptEnableBluetooth()
                     // TODO display Scan button
+                    val btFragment = BluetoothFragment.newInstance(false)
+                    btFragment.show(supportFragmentManager, "BluetoothFragment")
                 }
                 else {
                     this.requestBtPermissions()
-                    this.promptEnableBluetooth()
+//                    this.promptEnableBluetooth()
                 }
             }
             else {
@@ -180,23 +182,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun promptEnableBluetooth() {
-        if (this.btAdapter == null) {
-            Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
-        }
-        else {
-            if (!this.btAdapter!!.isEnabled) {
-                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-
-                if (this.hasBtPermissions()) {
-                    this.activityResultLauncher.launch(enableBtIntent)
-                }
-                else {
-                    this.requestBtPermissions()
-                }
-            }
-        }
-    }
+//    private fun promptEnableBluetooth() {
+//        if (this.btAdapter == null) {
+//            Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
+//        }
+//        else {
+//            if (!this.btAdapter!!.isEnabled) {
+//                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+//
+//                if (this.hasBtPermissions()) {
+//                    this.activityResultLauncher.launch(enableBtIntent)
+//                }
+//                else {
+//                    this.requestBtPermissions()
+//                }
+//            }
+//        }
+//    }
 
     private fun hasPermission(permission: String): Boolean =
         ContextCompat.checkSelfPermission(this, permission) ==
