@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">BLE Score Counter Remote Controller</string>
     <string name="bt_btn_content_desc">Bluetooth</string>
-    <string name="scan_btn_text">Scan</string>
+    <string name="scan_btn_text">Start Scan</string>
     <string name="connect_btn_text">Connect</string>
     <string name="disconnect_btn_text">Disconnect</string>
     <string name="cancel_btn_text">Cancel</string>
+    <string name="found_devices_content_desc">Found Devices</string>
 </resources>

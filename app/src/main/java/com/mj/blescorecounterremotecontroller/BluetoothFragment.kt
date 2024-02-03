@@ -1,24 +1,29 @@
 package com.mj.blescorecounterremotecontroller
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
 
-
-const val SCAN_PERIOD: Long = 7000
 
 /**
  * A simple [Fragment] subclass.
@@ -34,6 +39,8 @@ class BluetoothFragment : DialogFragment() {
         bluetoothManager?.adapter
     }
 
+    private val scanResults = mutableListOf<ScanResult>()
+
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var scanBtn: Button
@@ -45,6 +52,77 @@ class BluetoothFragment : DialogFragment() {
 //    private var mainActivity: MainActivity? = null
 
     private var alreadyConnected: Boolean = false
+
+    /**
+     * Do not set this property before the view is created!
+     */
+    private var isScanning = false
+        set(value) {
+            field = value
+            scanBtn.text = if (value) "Stop Scan" else "Start Scan"
+        }
+
+    // TODO add filtering on name
+    private val scanFilter = ScanFilter.Builder()
+        .build()
+
+    private val scanSettings = ScanSettings.Builder()
+        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        // TODO Enable after testing W/ and W/O
+//        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
+        .build()
+
+    private val scanCallback = object : ScanCallback() {
+        @SuppressLint("MissingPermission")
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            super.onScanResult(callbackType, result)
+
+            if (scanResults.none { it.device.address == result.device.address
+                        // TODO remove the name comparison, when filtering on name applied
+                        && it.device.name == result.device.name
+                }) {
+                with(result.device) {
+                    var msg = "Found BLE device! Name: ${name ?: "Unnamed"}, address: $address"
+                    // TODO Maybe change uuids to result.scanRecord.serviceUuids
+                    uuids?.let {
+                        msg += ", UUIDS:"
+                        it.forEachIndexed { i, parcelUuid ->
+                            msg += ", UUIDS:\n${i+1}: ${parcelUuid.uuid}"
+                        }
+                    }
+
+                    Log.i(Constants.BT_TAG, msg)
+                }
+                scanResults.add(result)
+
+                // TODO fill the textview
+                foundDevices.text = scanResults.mapIndexed { i, scanResult ->
+                    "${i+1}. ${scanResult.device.name}\n ${scanResult.device.address}" }
+                    .joinToString(separator = "\n") { item -> item }
+            }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
+        }
+    }
+
+
+    companion object {
+        /**
+         * Use this factory method to create a new instance of
+         * this fragment using the provided parameters.
+         *
+         * @return A new instance of fragment BluetoothFragment.
+         */
+        @JvmStatic
+        fun newInstance(alreadyConnected: Boolean) =
+            BluetoothFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean(Constants.ALREADY_CONNECTED_PARAM, alreadyConnected)
+                }
+            }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,30 +142,47 @@ class BluetoothFragment : DialogFragment() {
         connectBtn = view.findViewById(R.id.connect_btn)
         disconnectBtn = view.findViewById(R.id.disconnect_btn)
         cancelBtn = view.findViewById(R.id.cancel_btn)
-        foundDevices = view.findViewById(R.id.found_devices_textview)
+        foundDevices = view.findViewById(R.id.found_devices_view)
 
 //        mainActivity = this.activity as MainActivity
 
         this.registerForActivityResult()
 
+        // The Connect button should be only visible when a device is selected
+        connectBtn.visibility = View.INVISIBLE
+
         if (this.alreadyConnected) {
-            connectBtn.isVisible = false
-            disconnectBtn.isVisible = true
+            disconnectBtn.visibility = View.VISIBLE
         }
 
         scanBtn.setOnClickListener {
-            // TODO
-            this.promptEnableBluetooth()
+            if (!this.isScanning) {
+                if (this.btAdapter != null) {
+                    if (this.btAdapter!!.isEnabled) {
+                        this.runScan()
+                    }
+                    else {
+                        this.promptEnableBluetooth()
+                    }
+                }
+                else {
+                    Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
+                }
+            }
+            else {
+                this.isScanning = false
+                this.stopBleScan()
+            }
         }
 
         connectBtn.setOnClickListener {
             // TODO
-            if (this.alreadyConnected) {
 
-            }
-            else {
+            dialog?.dismiss()
+        }
 
-            }
+        disconnectBtn.setOnClickListener {
+            // TODO
 
             dialog?.dismiss()
         }
@@ -96,9 +191,20 @@ class BluetoothFragment : DialogFragment() {
 
         foundDevices.setOnClickListener {
             // TODO
+            connectBtn.visibility = View.VISIBLE
         }
 
         return view
+    }
+
+    private fun runScan() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            this.isScanning = false
+            this.stopBleScan()
+        }, Constants.SCAN_PERIOD)
+
+        this.isScanning = true
+        this.startBleScan()
     }
 
 //    override fun onDestroy() {
@@ -107,20 +213,32 @@ class BluetoothFragment : DialogFragment() {
 //        mainActivity = null
 //    }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @return A new instance of fragment BluetoothFragment.
-         */
-        @JvmStatic
-        fun newInstance(alreadyConnected: Boolean) =
-            BluetoothFragment().apply {
-                arguments = Bundle().apply {
-                    putBoolean(Constants.ALREADY_CONNECTED_PARAM, alreadyConnected)
-                }
-            }
+    /**
+     * It is assumed that the required permissions are already granted and bluetooth is enabled
+     * before calling this method.
+     */
+    @SuppressLint("MissingPermission")
+    private fun startBleScan() {
+        scanResults.clear()
+        // TODO
+//        scanResultAdapter.notifyDataSetChanged()
+        if (btAdapter != null) {
+            btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
+        }
+        else {
+            Log.i(Constants.BT_TAG, "BluetoothAdapter is null!")
+        }
+    }
+
+    /**
+     * It is assumed that the required permissions are already granted and bluetooth is enabled
+     * before calling this method.
+     */
+    @SuppressLint("MissingPermission")
+    private fun stopBleScan() {
+        if (btAdapter != null) {
+            btAdapter!!.bluetoothLeScanner.stopScan(scanCallback)
+        }
     }
 
     private fun registerForActivityResult() {
@@ -129,21 +247,18 @@ class BluetoothFragment : DialogFragment() {
         ) { result ->
             if (result.resultCode == AppCompatActivity.RESULT_OK) {
                 Log.i(Constants.BT_TAG, "Enable Bluetooth activity result OK")
+                this.runScan()
             } else {
                 Log.i(Constants.BT_TAG, "Enable Bluetooth activity result DENIED")
+                Toast.makeText(context, "Bluetooth was not enabled!", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun promptEnableBluetooth() {
-        if (this.btAdapter == null) {
-            Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
-        }
-        else {
-            if (!this.btAdapter!!.isEnabled) {
-                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                this.activityResultLauncher.launch(enableBtIntent)
-            }
+        if (!this.btAdapter!!.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            this.activityResultLauncher.launch(enableBtIntent)
         }
     }
 }

@@ -38,16 +38,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/found_devices_textview" />
+        app:layout_constraintTop_toBottomOf="@+id/found_devices_view" />
 
-    <TextView
-        android:id="@+id/found_devices_textview"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/found_devices_view"
         android:layout_width="270dp"
         android:layout_height="144dp"
         android:layout_marginTop="20dp"
-        android:contentDescription="Found devices"
+        android:background="#312196F3"
+        android:contentDescription="@string/found_devices_content_desc"
         android:ems="10"
         android:gravity="start|top"
+        android:scrollbars="vertical"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

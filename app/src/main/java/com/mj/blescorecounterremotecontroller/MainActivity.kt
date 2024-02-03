@@ -1,25 +1,19 @@
 package com.mj.blescorecounterremotecontroller
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
@@ -90,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         this.registerActivityForResult()
 
         mainBinding.btButton.setOnClickListener {
-            this.displayBtFragment()
+            this.onBtButtonClick()
         }
     }
 
@@ -128,6 +122,7 @@ class MainActivity : AppCompatActivity() {
                         !ActivityCompat.shouldShowRequestPermissionRationale(this, it.first)
                 }
             val containsDenial = grantResults.any { it == PackageManager.PERMISSION_DENIED }
+            val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
 
             when {
                 containsPermanentDenial -> {
@@ -137,31 +132,37 @@ class MainActivity : AppCompatActivity() {
                 containsDenial -> {
                     this.showRequestBtPermissionsRationale()
                 }
+                allGranted -> {
+                    this.displayBtFragment()
+                }
             }
         }
     }
 
-    private fun displayBtFragment() {
-        // TODO if already connected to a BT device, display Disconnect button and Scan button
-        // else {
-            if (this.isBleSupported()) {
-                if (this.hasBtPermissions()) {
+    private fun onBtButtonClick() {
+        if (this.isBleSupported()) {
+
+            if (this.hasBtPermissions()) {
 //                    this.promptEnableBluetooth()
-                    // TODO display Scan button
-                    val btFragment = BluetoothFragment.newInstance(false)
-                    btFragment.show(supportFragmentManager, "BluetoothFragment")
-                }
-                else {
-                    this.requestBtPermissions()
-//                    this.promptEnableBluetooth()
-                }
+                this.displayBtFragment()
             }
             else {
-                Toast.makeText(this, "Bluetooth Low Energy is not supported on this " +
-                        "device", Toast.LENGTH_LONG).show()
+                this.requestBtPermissions()
+//                if (this.hasBtPermissions()) {
+//                    btFragment.show(supportFragmentManager, "BluetoothFragment")
+//                }
+//                    this.promptEnableBluetooth()
             }
-        // }
-        // TODO display Cancel button
+        }
+        else {
+            Toast.makeText(this, "Bluetooth Low Energy is not supported on this " +
+                    "device", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun displayBtFragment() {
+        val btFragment = BluetoothFragment.newInstance(false)
+        btFragment.show(supportFragmentManager, "BluetoothFragment")
     }
 
     // TODO use when clicking on BT button
@@ -237,7 +238,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Bluetooth permissions were permanently denied!")
             .setMessage("Please, navigate to App Settings and manually grant Bluetooth " +
-                    "permissions. Otherwise, the App will not work without them!")
+                    "permissions to allow connection to BLE Score Counter.")
             .setPositiveButton("OK") { _, _ -> }
             .show()
     }
