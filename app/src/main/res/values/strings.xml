@@ -6,4 +6,6 @@
     <string name="disconnect_btn_text">Disconnect</string>
     <string name="cancel_btn_text">Cancel</string>
     <string name="found_devices_content_desc">Found Devices</string>
+    <string name="bt_device_name">Name: %1$s</string>
+    <string name="bt_device_mac_address">MAC address: %1$s</string>
 </resources>

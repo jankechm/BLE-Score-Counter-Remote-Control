@@ -16,13 +16,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 /**
@@ -32,7 +33,7 @@ import androidx.fragment.app.Fragment
  *
  * It is supposed to be used only from [MainActivity]!
  */
-class BluetoothFragment : DialogFragment() {
+class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
 
     private val btAdapter: BluetoothAdapter? by lazy {
         val bluetoothManager: BluetoothManager? = context?.getSystemService(BluetoothManager::class.java)
@@ -46,8 +47,9 @@ class BluetoothFragment : DialogFragment() {
     private lateinit var scanBtn: Button
     private lateinit var connectBtn: Button
     private lateinit var disconnectBtn: Button
-    private lateinit var cancelBtn: Button
-    private lateinit var foundDevices: TextView
+    private lateinit var foundDevices: RecyclerView
+
+    private lateinit var btDevicesAdapter: BtDevicesAdapter
 
 //    private var mainActivity: MainActivity? = null
 
@@ -95,10 +97,14 @@ class BluetoothFragment : DialogFragment() {
                 }
                 scanResults.add(result)
 
-                // TODO fill the textview
-                foundDevices.text = scanResults.mapIndexed { i, scanResult ->
-                    "${i+1}. ${scanResult.device.name}\n ${scanResult.device.address}" }
-                    .joinToString(separator = "\n") { item -> item }
+                val devicesNames = scanResults.map { res -> res.device.name ?: "" }
+                val devicesAddresses = scanResults.map { res -> res.device.address }
+
+                btDevicesAdapter = BtDevicesAdapter(devicesNames, devicesAddresses,
+                    this@BluetoothFragment)
+                foundDevices.layoutManager = LinearLayoutManager(context)
+                foundDevices.adapter = btDevicesAdapter
+
             }
         }
 
@@ -141,7 +147,6 @@ class BluetoothFragment : DialogFragment() {
         scanBtn = view.findViewById(R.id.scan_btn)
         connectBtn = view.findViewById(R.id.connect_btn)
         disconnectBtn = view.findViewById(R.id.disconnect_btn)
-        cancelBtn = view.findViewById(R.id.cancel_btn)
         foundDevices = view.findViewById(R.id.found_devices_view)
 
 //        mainActivity = this.activity as MainActivity
@@ -155,9 +160,13 @@ class BluetoothFragment : DialogFragment() {
             disconnectBtn.visibility = View.VISIBLE
         }
 
+        foundDevices.layoutManager = LinearLayoutManager(context)
+
         scanBtn.setOnClickListener {
             if (!this.isScanning) {
                 if (this.btAdapter != null) {
+                    connectBtn.visibility = View.INVISIBLE
+
                     if (this.btAdapter!!.isEnabled) {
                         this.runScan()
                     }
@@ -185,13 +194,6 @@ class BluetoothFragment : DialogFragment() {
             // TODO
 
             dialog?.dismiss()
-        }
-
-        cancelBtn.setOnClickListener { dialog?.dismiss() }
-
-        foundDevices.setOnClickListener {
-            // TODO
-            connectBtn.visibility = View.VISIBLE
         }
 
         return view
@@ -260,5 +262,11 @@ class BluetoothFragment : DialogFragment() {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             this.activityResultLauncher.launch(enableBtIntent)
         }
+    }
+
+    override fun onBtDeviceClicked(position: Int) {
+        this.connectBtn.visibility = View.VISIBLE
+
+        // TODO store position for connecting later?
     }
 }
