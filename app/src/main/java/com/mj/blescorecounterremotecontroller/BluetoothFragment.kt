@@ -54,6 +54,7 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
 //    private var mainActivity: MainActivity? = null
 
     private var alreadyConnected: Boolean = false
+    private var deviceToConnectIdx: Int = -1
 
     /**
      * Do not set this property before the view is created!
@@ -160,7 +161,7 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
             disconnectBtn.visibility = View.VISIBLE
         }
 
-        foundDevices.layoutManager = LinearLayoutManager(context)
+//        foundDevices.layoutManager = LinearLayoutManager(context)
 
         scanBtn.setOnClickListener {
             if (!this.isScanning) {
@@ -186,6 +187,7 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
 
         connectBtn.setOnClickListener {
             // TODO
+            var deviceToConnect = this.scanResults[this.deviceToConnectIdx].device
 
             dialog?.dismiss()
         }
@@ -267,6 +269,6 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
     override fun onBtDeviceClicked(position: Int) {
         this.connectBtn.visibility = View.VISIBLE
 
-        // TODO store position for connecting later?
+        this.deviceToConnectIdx = position
     }
 }
