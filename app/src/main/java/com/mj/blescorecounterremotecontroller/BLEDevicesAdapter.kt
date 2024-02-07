@@ -12,14 +12,14 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
-class BtDevicesAdapter(
+class BLEDevicesAdapter(
     private val items: List<ScanResult>,
     private val onClickListener: ((device: ScanResult) -> Unit)
-    ) : RecyclerView.Adapter<BtDevicesAdapter.BtDeviceViewHolder>() {
+    ) : RecyclerView.Adapter<BLEDevicesAdapter.BLEDeviceViewHolder>() {
 
     private var selectedPosition = RecyclerView.NO_POSITION
 
-    inner class BtDeviceViewHolder(
+    inner class BLEDeviceViewHolder(
         itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
 
@@ -43,11 +43,11 @@ class BtDevicesAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BtDeviceViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BLEDeviceViewHolder {
         val view : View = LayoutInflater.from(parent.context)
             .inflate(R.layout.bt_device, parent, false)
 
-        return BtDeviceViewHolder(view)
+        return BLEDeviceViewHolder(view)
     }
 
     override fun getItemCount(): Int {
@@ -55,7 +55,7 @@ class BtDevicesAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    override fun onBindViewHolder(holder: BtDeviceViewHolder, @SuppressLint("RecyclerView") position: Int) {
+    override fun onBindViewHolder(holder: BLEDeviceViewHolder, @SuppressLint("RecyclerView") position: Int) {
         holder.bind(position)
 
         if (position == this.selectedPosition) {
@@ -80,7 +80,7 @@ class BtDevicesAdapter(
         selectedPosition = RecyclerView.NO_POSITION
     }
 
-    private fun markCardView(holder: BtDeviceViewHolder) {
+    private fun markCardView(holder: BLEDeviceViewHolder) {
         val cardViewBg = holder.cardViewDevice.background
         cardViewBg.setTint(Color.BLACK)
         holder.cardViewDevice.background = cardViewBg
@@ -90,7 +90,7 @@ class BtDevicesAdapter(
         holder.textViewMac.setTextColor(Color.WHITE)
     }
 
-    private fun unmarkCardView(holder: BtDeviceViewHolder) {
+    private fun unmarkCardView(holder: BLEDeviceViewHolder) {
         val cardViewBg = holder.cardViewDevice.background
         val colorResId = com.google.android.material.R.color.material_dynamic_secondary90
         cardViewBg.setTint(ContextCompat.getColor(holder.context, colorResId))

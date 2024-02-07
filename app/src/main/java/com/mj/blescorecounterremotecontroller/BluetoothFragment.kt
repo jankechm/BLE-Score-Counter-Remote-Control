@@ -96,7 +96,7 @@ class BluetoothFragment : DialogFragment() {
                 }
 
                 scanResults.add(result)
-                btDevicesAdapter.notifyItemChanged(scanResults.size - 1)
+                bleDevicesAdapter.notifyItemChanged(scanResults.size - 1)
             }
         }
 
@@ -105,8 +105,8 @@ class BluetoothFragment : DialogFragment() {
         }
     }
 
-    private val btDevicesAdapter: BtDevicesAdapter by lazy {
-        BtDevicesAdapter(scanResults) { selectedResult ->
+    private val bleDevicesAdapter: BLEDevicesAdapter by lazy {
+        BLEDevicesAdapter(scanResults) { selectedResult ->
             selectedScanResult = selectedResult
             connectBtn.visibility = View.VISIBLE
         }
@@ -160,7 +160,7 @@ class BluetoothFragment : DialogFragment() {
         }
 
         foundDevices.layoutManager = LinearLayoutManager(context)
-        foundDevices.adapter = btDevicesAdapter
+        foundDevices.adapter = bleDevicesAdapter
 
         scanBtn.setOnClickListener {
             if (!this.isScanning) {
@@ -223,8 +223,8 @@ class BluetoothFragment : DialogFragment() {
     private fun startBleScan() {
         // The order of these calls is important
         scanResults.clear()
-        btDevicesAdapter.resetSelectedPosition()
-        btDevicesAdapter.notifyDataSetChanged()
+        bleDevicesAdapter.resetSelectedPosition()
+        bleDevicesAdapter.notifyDataSetChanged()
 
         if (btAdapter != null) {
             btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
