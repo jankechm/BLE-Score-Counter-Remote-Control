@@ -33,7 +33,7 @@ import androidx.recyclerview.widget.RecyclerView
  *
  * It is supposed to be used only from [MainActivity]!
  */
-class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
+class BluetoothFragment : DialogFragment() {
 
     private val btAdapter: BluetoothAdapter? by lazy {
         val bluetoothManager: BluetoothManager? = context?.getSystemService(BluetoothManager::class.java)
@@ -49,12 +49,10 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
     private lateinit var disconnectBtn: Button
     private lateinit var foundDevices: RecyclerView
 
-    private lateinit var btDevicesAdapter: BtDevicesAdapter
-
 //    private var mainActivity: MainActivity? = null
 
     private var alreadyConnected: Boolean = false
-    private var deviceToConnectIdx: Int = -1
+    private var selectedScanResult: ScanResult? = null
 
     /**
      * Do not set this property before the view is created!
@@ -96,21 +94,21 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
 
                     Log.i(Constants.BT_TAG, msg)
                 }
+
                 scanResults.add(result)
-
-                val devicesNames = scanResults.map { res -> res.device.name ?: "" }
-                val devicesAddresses = scanResults.map { res -> res.device.address }
-
-                btDevicesAdapter = BtDevicesAdapter(devicesNames, devicesAddresses,
-                    this@BluetoothFragment)
-                foundDevices.layoutManager = LinearLayoutManager(context)
-                foundDevices.adapter = btDevicesAdapter
-
+                btDevicesAdapter.notifyItemChanged(scanResults.size - 1)
             }
         }
 
         override fun onScanFailed(errorCode: Int) {
             Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
+        }
+    }
+
+    private val btDevicesAdapter: BtDevicesAdapter by lazy {
+        BtDevicesAdapter(scanResults) { selectedResult ->
+            selectedScanResult = selectedResult
+            connectBtn.visibility = View.VISIBLE
         }
     }
 
@@ -161,7 +159,8 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
             disconnectBtn.visibility = View.VISIBLE
         }
 
-//        foundDevices.layoutManager = LinearLayoutManager(context)
+        foundDevices.layoutManager = LinearLayoutManager(context)
+        foundDevices.adapter = btDevicesAdapter
 
         scanBtn.setOnClickListener {
             if (!this.isScanning) {
@@ -187,7 +186,6 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
 
         connectBtn.setOnClickListener {
             // TODO
-            var deviceToConnect = this.scanResults[this.deviceToConnectIdx].device
 
             dialog?.dismiss()
         }
@@ -221,11 +219,13 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
      * It is assumed that the required permissions are already granted and bluetooth is enabled
      * before calling this method.
      */
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "NotifyDataSetChanged")
     private fun startBleScan() {
+        // The order of these calls is important
         scanResults.clear()
-        // TODO
-//        scanResultAdapter.notifyDataSetChanged()
+        btDevicesAdapter.resetSelectedPosition()
+        btDevicesAdapter.notifyDataSetChanged()
+
         if (btAdapter != null) {
             btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
         }
@@ -264,11 +264,5 @@ class BluetoothFragment : DialogFragment(), BtDeviceClickListener {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             this.activityResultLauncher.launch(enableBtIntent)
         }
-    }
-
-    override fun onBtDeviceClicked(position: Int) {
-        this.connectBtn.visibility = View.VISIBLE
-
-        this.deviceToConnectIdx = position
     }
 }

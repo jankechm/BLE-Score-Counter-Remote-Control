@@ -5,4 +5,7 @@
 - When successfully connected to the Score Counter, display a message on it's display. Either do it
   just on it's display automatically, or send some command immediately. Also, indicate connection
   on the phone.
-- Move Disconnect button outside of BluetoothFragment, add it to MainActivity?
+- Move Disconnect button outside of BluetoothFragment?? Add it to MainActivity??
+
+- Consider using a helper class just for BLE Scanning.
+    - Store BluetoothDevice in MyApplication?
