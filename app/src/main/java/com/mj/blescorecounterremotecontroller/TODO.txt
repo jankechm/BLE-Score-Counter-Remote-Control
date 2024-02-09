@@ -7,5 +7,4 @@
   on the phone.
 - Move Disconnect button outside of BluetoothFragment?? Add it to MainActivity??
 
-- Consider using a helper class just for BLE Scanning.
-    - Store BluetoothDevice in MyApplication?
+- TRANSPORT_LE in connectGatt()

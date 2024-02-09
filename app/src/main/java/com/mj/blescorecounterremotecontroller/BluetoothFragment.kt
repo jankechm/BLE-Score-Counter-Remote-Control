@@ -4,9 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -40,9 +38,20 @@ class BluetoothFragment : DialogFragment() {
         bluetoothManager?.adapter
     }
 
+    private val bleScanner: BLEScanner by lazy {
+        BLEScanner(btAdapter, scanCallback)
+    }
+
+    private val bleDevicesAdapter: BLEDevicesAdapter by lazy {
+        BLEDevicesAdapter(scanResults) { selectedResult ->
+            selectedScanResult = selectedResult
+            connectBtn.visibility = View.VISIBLE
+        }
+    }
+
     private val scanResults = mutableListOf<ScanResult>()
 
-    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var enableBtActivityResultLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var scanBtn: Button
     private lateinit var connectBtn: Button
@@ -63,16 +72,6 @@ class BluetoothFragment : DialogFragment() {
             scanBtn.text = if (value) "Stop Scan" else "Start Scan"
         }
 
-    // TODO add filtering on name
-    private val scanFilter = ScanFilter.Builder()
-        .build()
-
-    private val scanSettings = ScanSettings.Builder()
-        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-        // TODO Enable after testing W/ and W/O
-//        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
-        .build()
-
     private val scanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -88,7 +87,7 @@ class BluetoothFragment : DialogFragment() {
                     uuids?.let {
                         msg += ", UUIDS:"
                         it.forEachIndexed { i, parcelUuid ->
-                            msg += ", UUIDS:\n${i+1}: ${parcelUuid.uuid}"
+                            msg += "\n${i+1}: ${parcelUuid.uuid}"
                         }
                     }
 
@@ -102,13 +101,6 @@ class BluetoothFragment : DialogFragment() {
 
         override fun onScanFailed(errorCode: Int) {
             Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
-        }
-    }
-
-    private val bleDevicesAdapter: BLEDevicesAdapter by lazy {
-        BLEDevicesAdapter(scanResults) { selectedResult ->
-            selectedScanResult = selectedResult
-            connectBtn.visibility = View.VISIBLE
         }
     }
 
@@ -150,7 +142,7 @@ class BluetoothFragment : DialogFragment() {
 
 //        mainActivity = this.activity as MainActivity
 
-        this.registerForActivityResult()
+        this.enableBtRegisterForActivityResult()
 
         // The Connect button should be only visible when a device is selected
         connectBtn.visibility = View.INVISIBLE
@@ -175,12 +167,12 @@ class BluetoothFragment : DialogFragment() {
                     }
                 }
                 else {
-                    Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
+                    Log.i(Constants.BT_TAG, "Start Scan: BluetoothAdapter is null")
                 }
             }
             else {
                 this.isScanning = false
-                this.stopBleScan()
+                bleScanner.stopBleScan(context)
             }
         }
 
@@ -199,14 +191,22 @@ class BluetoothFragment : DialogFragment() {
         return view
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun runScan() {
         Handler(Looper.getMainLooper()).postDelayed({
             this.isScanning = false
-            this.stopBleScan()
+//            this.stopBleScan()
+            bleScanner.stopBleScan(context)
         }, Constants.SCAN_PERIOD)
 
         this.isScanning = true
-        this.startBleScan()
+//        this.startBleScan()
+
+        // The order of these calls is important
+        scanResults.clear()
+        bleDevicesAdapter.resetSelectedPosition()
+        bleDevicesAdapter.notifyDataSetChanged()
+        bleScanner.startBleScan(context)
     }
 
 //    override fun onDestroy() {
@@ -215,38 +215,38 @@ class BluetoothFragment : DialogFragment() {
 //        mainActivity = null
 //    }
 
-    /**
-     * It is assumed that the required permissions are already granted and bluetooth is enabled
-     * before calling this method.
-     */
-    @SuppressLint("MissingPermission", "NotifyDataSetChanged")
-    private fun startBleScan() {
-        // The order of these calls is important
-        scanResults.clear()
-        bleDevicesAdapter.resetSelectedPosition()
-        bleDevicesAdapter.notifyDataSetChanged()
+//    /**
+//     * It is assumed that the required permissions are already granted and bluetooth is enabled
+//     * before calling this method.
+//     */
+//    @SuppressLint("MissingPermission", "NotifyDataSetChanged")
+//    private fun startBleScan() {
+//        // The order of these calls is important
+//        scanResults.clear()
+//        bleDevicesAdapter.resetSelectedPosition()
+//        bleDevicesAdapter.notifyDataSetChanged()
+//
+//        if (btAdapter != null) {
+//            btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
+//        }
+//        else {
+//            Log.i(Constants.BT_TAG, "BluetoothAdapter is null!")
+//        }
+//    }
+//
+//    /**
+//     * It is assumed that the required permissions are already granted and bluetooth is enabled
+//     * before calling this method.
+//     */
+//    @SuppressLint("MissingPermission")
+//    private fun stopBleScan() {
+//        if (btAdapter != null) {
+//            btAdapter!!.bluetoothLeScanner.stopScan(scanCallback)
+//        }
+//    }
 
-        if (btAdapter != null) {
-            btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
-        }
-        else {
-            Log.i(Constants.BT_TAG, "BluetoothAdapter is null!")
-        }
-    }
-
-    /**
-     * It is assumed that the required permissions are already granted and bluetooth is enabled
-     * before calling this method.
-     */
-    @SuppressLint("MissingPermission")
-    private fun stopBleScan() {
-        if (btAdapter != null) {
-            btAdapter!!.bluetoothLeScanner.stopScan(scanCallback)
-        }
-    }
-
-    private fun registerForActivityResult() {
-        this.activityResultLauncher = registerForActivityResult(
+    private fun enableBtRegisterForActivityResult() {
+        this.enableBtActivityResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == AppCompatActivity.RESULT_OK) {
@@ -262,7 +262,7 @@ class BluetoothFragment : DialogFragment() {
     private fun promptEnableBluetooth() {
         if (!this.btAdapter!!.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            this.activityResultLauncher.launch(enableBtIntent)
+            this.enableBtActivityResultLauncher.launch(enableBtIntent)
         }
     }
 }
