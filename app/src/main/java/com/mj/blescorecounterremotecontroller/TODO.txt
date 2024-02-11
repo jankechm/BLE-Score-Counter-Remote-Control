@@ -6,5 +6,8 @@
   just on it's display automatically, or send some command immediately. Also, indicate connection
   on the phone.
 - Move Disconnect button outside of BluetoothFragment?? Add it to MainActivity??
+  Perhaps, implement disconnect on BT button long press.
 
-- TRANSPORT_LE in connectGatt()
+- Stop Scan before connecting to a BLE device
+- Error status 133: when you see this status (or error 128), always try adding 60~100ms delay
+  after the last successful operation.
