@@ -49,6 +49,8 @@ class BluetoothFragment : DialogFragment() {
         }
     }
 
+    private val handler: Handler = Handler(Looper.getMainLooper())
+
     private val scanResults = mutableListOf<ScanResult>()
 
     private lateinit var enableBtActivityResultLauncher: ActivityResultLauncher<Intent>
@@ -104,6 +106,24 @@ class BluetoothFragment : DialogFragment() {
         }
     }
 
+    private val connectionEventListener by lazy {
+        ConnectionEventListener().apply {
+            onConnect = {
+                handler.post {
+                    Toast.makeText(context,
+                        "Connected to ${it.address}", Toast.LENGTH_LONG).show()
+                    dialog?.dismiss()
+                }
+            }
+            onDisconnect = {
+                handler.post {
+                    Toast.makeText(context, "Disconnected from ${it.address}",
+                        Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
 
     companion object {
         /**
@@ -144,6 +164,8 @@ class BluetoothFragment : DialogFragment() {
 
         this.enableBtRegisterForActivityResult()
 
+        ConnectionManager.registerListener(connectionEventListener)
+
         // The Connect button should be only visible when a device is selected
         connectBtn.visibility = View.INVISIBLE
 
@@ -167,7 +189,7 @@ class BluetoothFragment : DialogFragment() {
                     }
                 }
                 else {
-                    Log.i(Constants.BT_TAG, "Start Scan: BluetoothAdapter is null")
+                    Log.e(Constants.BT_TAG, "Start Scan: BluetoothAdapter is null")
                 }
             }
             else {
@@ -177,23 +199,39 @@ class BluetoothFragment : DialogFragment() {
         }
 
         connectBtn.setOnClickListener {
-            // TODO
-
-            dialog?.dismiss()
+            if (selectedScanResult != null) {
+                this.isScanning = false
+                bleScanner.stopBleScan(context)
+                try {
+                    ConnectionManager.connect(this.selectedScanResult!!.device, requireContext())
+                } catch (e: IllegalStateException) {
+                    Log.e(Constants.BT_TAG, "Missing context!", e)
+                }
+            }
+            else {
+                Log.w(Constants.BT_TAG, "Connect: ScanResult is null")
+            }
         }
 
         disconnectBtn.setOnClickListener {
-            // TODO
-
+            // TODO disconnect only specific device(s)
+            this.isScanning = false
+            bleScanner.stopBleScan(context)
+            ConnectionManager.disconnectAllDevices()
             dialog?.dismiss()
         }
 
         return view
     }
 
+    override fun onDestroy() {
+        ConnectionManager.unregisterListener(connectionEventListener)
+        super.onDestroy()
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private fun runScan() {
-        Handler(Looper.getMainLooper()).postDelayed({
+        handler.postDelayed({
             this.isScanning = false
 //            this.stopBleScan()
             bleScanner.stopBleScan(context)

@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -23,6 +22,17 @@ class MainActivity : AppCompatActivity() {
     private val btAdapter: BluetoothAdapter? by lazy {
         val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
         bluetoothManager.adapter
+    }
+
+    private val connectionEventListener by lazy {
+        ConnectionEventListener().apply {
+            onConnect = {
+                mainBinding.btButton.setImageResource(R.drawable.bluetooth_connected)
+            }
+            onDisconnect = {
+                mainBinding.btButton.setImageResource(R.drawable.bluetooth)
+            }
+        }
     }
 
     // TODO add filtering on name
@@ -64,11 +74,11 @@ class MainActivity : AppCompatActivity() {
 //    private val scanResults = mutableListOf<ScanResult>()
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
-    private var scanning = false
+//    private var scanning = false
     private var permissionsPermanentlyDenied = false
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
-    private lateinit var bleScanner: BluetoothLeScanner
+//    private lateinit var bleScanner: BluetoothLeScanner
     private lateinit var mainBinding: ActivityMainBinding
 
 
@@ -82,6 +92,8 @@ class MainActivity : AppCompatActivity() {
 //        setContentView(R.layout.activity_main)
 
         this.registerActivityForResult()
+
+        ConnectionManager.registerListener(connectionEventListener)
 
         mainBinding.btButton.setOnClickListener {
             this.onBtButtonClick()
@@ -98,6 +110,12 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
 
         this.unregisterReceiver(btStateChangedReceiver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        ConnectionManager.unregisterListener(connectionEventListener)
     }
 
     /**

@@ -53,6 +53,11 @@ object ConnectionManager {
         enqueueOperation(MtuRequest(device, mtu.coerceIn(GATT_MIN_MTU_SIZE, GATT_MAX_MTU_SIZE)))
     }
 
+    fun disconnectAllDevices() {
+        val disconnectOps = deviceGattMap.keys.map { Disconnect(it) }.toList()
+        disconnectOps.forEach { enqueueOperation(it) }
+    }
+
     @Synchronized
     private fun enqueueOperation(operation: BleOperationType) {
         operationQueue.add(operation)
@@ -149,6 +154,7 @@ object ConnectionManager {
                 // Random, sporadic errors
                 133, 128 -> {
                     if (pendingOperation is Connect) {
+                        val operation = pendingOperation as Connect
                         var connectAttempt = deviceConnectAttemptsMap[device] ?: 0
                         if (connectAttempt < Constants.MAX_CONNECT_ATTEMPTS) {
                             // Retry to connect
@@ -156,7 +162,7 @@ object ConnectionManager {
                             Log.e(Constants.BT_TAG, "Connect operation was not successful " +
                                     "for $deviceAddress, trying again. Attempt #$connectAttempt")
                             deviceConnectAttemptsMap[device] = connectAttempt
-                            enqueueOperation(pendingOperation as Connect)
+                            enqueueOperation(operation)
                         }
                         else {
                             Log.e(Constants.BT_TAG, "Max connect attempts reached " +
