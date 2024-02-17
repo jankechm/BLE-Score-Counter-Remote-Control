@@ -8,8 +8,7 @@
 
 - Error status 133: when you see this status (or error 128), always try adding 60~100ms delay
   after the last successful operation.
-- Teardown all connections when bluetooth is turned off?
-    - Indicate the connection status on BT icon.
+- Remember device when connected. If out of range and in range again, reconnect automatically.
 - Disconnect specific device instead of all.
     - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
       device to disconnect from if needed?

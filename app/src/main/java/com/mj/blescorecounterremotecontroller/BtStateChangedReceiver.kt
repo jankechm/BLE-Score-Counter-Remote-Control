@@ -11,7 +11,6 @@ import android.widget.Toast
 class BtStateChangedReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        // TODO
         if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
             Log.i(Constants.BT_TAG, "Bluetooth state changed")
 
@@ -19,6 +18,7 @@ class BtStateChangedReceiver : BroadcastReceiver() {
                 BluetoothAdapter.STATE_OFF -> {
                     Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_LONG).show()
                     Log.i(Constants.BT_TAG, "Bluetooth is off")
+                    ConnectionManager.disconnectAllDevices()
                 }
 
                 BluetoothAdapter.STATE_ON -> {
