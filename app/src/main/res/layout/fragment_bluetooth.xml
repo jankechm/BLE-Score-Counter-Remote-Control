@@ -23,10 +23,12 @@
         android:id="@+id/connect_btn"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="27dp"
+        android:layout_marginEnd="201dp"
         android:text="@string/connect_btn_text"
         android:textSize="16sp"
-        app:layout_constraintEnd_toStartOf="@+id/disconnect_btn"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scan_btn" />
@@ -48,16 +50,16 @@
         app:layout_constraintTop_toBottomOf="@+id/connect_btn"
         tools:listitem="@layout/bt_device" />
 
-    <Button
-        android:id="@+id/disconnect_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:layout_marginTop="27dp"
-        android:text="@string/disconnect_btn_text"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/connect_btn"
-        app:layout_constraintTop_toBottomOf="@+id/scan_btn" />
+<!--    <Button-->
+<!--        android:id="@+id/disconnect_btn"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="60dp"-->
+<!--        android:layout_marginTop="27dp"-->
+<!--        android:text="@string/disconnect_btn_text"-->
+<!--        android:textSize="16sp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.5"-->
+<!--        app:layout_constraintStart_toEndOf="@+id/connect_btn"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/scan_btn" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

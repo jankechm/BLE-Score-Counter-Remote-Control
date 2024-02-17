@@ -5,15 +5,13 @@
 - When successfully connected to the Score Counter, display a message on it's display. Either do it
   just on it's display automatically, or send some command immediately. Also, indicate connection
   on the phone.
-- Move Disconnect button outside of BluetoothFragment?? Add it to MainActivity??
 
-- Stop Scan before connecting to a BLE device
 - Error status 133: when you see this status (or error 128), always try adding 60~100ms delay
   after the last successful operation.
 - Teardown all connections when bluetooth is turned off?
     - Indicate the connection status on BT icon.
-- Intermediary class between ConnectionManager and BluetoothFragment, that would know which
-  device to disconnect from if needed?
-- Disconnect on BT button long press.
-- Merge ConnectionEventListener from BluetoothFragment and MainActivity and keep only one?
 - Disconnect specific device instead of all.
+    - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
+      device to disconnect from if needed?
+- If already connected to a GATT device, disconnect first before connecting to another?
+

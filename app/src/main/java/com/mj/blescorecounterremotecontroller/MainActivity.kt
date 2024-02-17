@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
             }
             onDisconnect = {
                 mainBinding.btButton.setImageResource(R.drawable.bluetooth)
+                Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
+                    Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -97,6 +99,12 @@ class MainActivity : AppCompatActivity() {
 
         mainBinding.btButton.setOnClickListener {
             this.onBtButtonClick()
+        }
+
+        mainBinding.btButton.setOnLongClickListener {
+            // TODO disconnect only specific device(s)
+            ConnectionManager.disconnectAllDevices()
+            true
         }
     }
 

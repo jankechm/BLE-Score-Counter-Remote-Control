@@ -57,7 +57,7 @@ class BluetoothFragment : DialogFragment() {
 
     private lateinit var scanBtn: Button
     private lateinit var connectBtn: Button
-    private lateinit var disconnectBtn: Button
+//    private lateinit var disconnectBtn: Button
     private lateinit var foundDevices: RecyclerView
 
 //    private var mainActivity: MainActivity? = null
@@ -115,12 +115,12 @@ class BluetoothFragment : DialogFragment() {
                     dialog?.dismiss()
                 }
             }
-            onDisconnect = {
-                handler.post {
-                    Toast.makeText(context, "Disconnected from ${it.address}",
-                        Toast.LENGTH_LONG).show()
-                }
-            }
+//            onDisconnect = {
+//                handler.post {
+//                    Toast.makeText(context, "Disconnected from ${it.address}",
+//                        Toast.LENGTH_LONG).show()
+//                }
+//            }
         }
     }
 
@@ -157,7 +157,7 @@ class BluetoothFragment : DialogFragment() {
 
         scanBtn = view.findViewById(R.id.scan_btn)
         connectBtn = view.findViewById(R.id.connect_btn)
-        disconnectBtn = view.findViewById(R.id.disconnect_btn)
+//        disconnectBtn = view.findViewById(R.id.disconnect_btn)
         foundDevices = view.findViewById(R.id.found_devices_view)
 
 //        mainActivity = this.activity as MainActivity
@@ -169,9 +169,9 @@ class BluetoothFragment : DialogFragment() {
         // The Connect button should be only visible when a device is selected
         connectBtn.visibility = View.INVISIBLE
 
-        if (this.alreadyConnected) {
-            disconnectBtn.visibility = View.VISIBLE
-        }
+//        if (this.alreadyConnected) {
+//            disconnectBtn.visibility = View.VISIBLE
+//        }
 
         foundDevices.layoutManager = LinearLayoutManager(context)
         foundDevices.adapter = bleDevicesAdapter
@@ -213,13 +213,13 @@ class BluetoothFragment : DialogFragment() {
             }
         }
 
-        disconnectBtn.setOnClickListener {
-            // TODO disconnect only specific device(s)
-            this.isScanning = false
-            bleScanner.stopBleScan(context)
-            ConnectionManager.disconnectAllDevices()
-            dialog?.dismiss()
-        }
+//        disconnectBtn.setOnClickListener {
+//            // TODO disconnect only specific device(s)
+//            this.isScanning = false
+//            bleScanner.stopBleScan(context)
+//            ConnectionManager.disconnectAllDevices()
+//            dialog?.dismiss()
+//        }
 
         return view
     }
