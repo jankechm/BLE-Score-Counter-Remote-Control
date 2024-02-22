@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
+import java.util.UUID
 
 fun BluetoothGatt.printGattTable() {
     if (services.isEmpty()) {
@@ -33,6 +34,29 @@ fun BluetoothGatt.printGattTable() {
     }
 }
 
+fun BluetoothGatt.findCharacteristic(uuid: UUID): BluetoothGattCharacteristic? {
+    services?.forEach { service ->
+        service.characteristics?.firstOrNull { characteristic ->
+            characteristic.uuid == uuid
+        }?.let { matchingCharacteristic ->
+            return matchingCharacteristic
+        }
+    }
+    return null
+}
+
+fun BluetoothGatt.findDescriptor(uuid: UUID): BluetoothGattDescriptor? {
+    services?.forEach { service ->
+        service.characteristics.forEach { characteristic ->
+            characteristic.descriptors?.firstOrNull { descriptor ->
+                descriptor.uuid == uuid
+            }?.let { matchingDescriptor ->
+                return matchingDescriptor
+            }
+        }
+    }
+    return null
+}
 
 fun BluetoothGattCharacteristic.printProperties(): String = mutableListOf<String>().apply {
     if (isReadable()) add("READABLE")
@@ -76,3 +100,9 @@ fun BluetoothGattDescriptor.isWritable(): Boolean =
 
 fun BluetoothGattDescriptor.containsPermission(permission: Int): Boolean =
     permissions and permission != 0
+
+fun BluetoothGattDescriptor.isCccd() =
+    uuid.toString().equals(Constants.CCC_DESCRIPTOR_UUID, ignoreCase = true)
+
+fun ByteArray.toHexString(): String =
+    joinToString(separator = " ", prefix = "0x") { String.format("%02X", it) }
