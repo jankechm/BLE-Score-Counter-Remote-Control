@@ -27,13 +27,64 @@
         android:layout_marginStart="128dp"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="229dp"
+        android:contentDescription="@string/bt_btn_content_desc"
         android:longClickable="true"
         android:padding="5dp"
         android:scaleType="fitCenter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/bluetooth"
-        android:contentDescription="@string/bt_btn_content_desc" />
+        app:srcCompat="@drawable/bluetooth" />
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <EditText
+            android:id="@+id/left_score"
+            style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/score_border"
+            android:ems="10"
+            android:gravity="center_horizontal|center_vertical"
+            android:inputType="none"
+            android:focusable="false"
+            android:padding="4dp"
+            android:text="0"
+            android:textSize="64sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:layout_editor_absoluteX="90dp"
+            android:importantForAutofill="no"
+            tools:ignore="LabelFor"
+            />
+
+        <EditText
+            android:id="@+id/right_score"
+            style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/score_border"
+            android:ems="10"
+            android:gravity="center_horizontal|center_vertical"
+            android:inputType="none"
+            android:focusable="false"
+            android:padding="4dp"
+            android:text="0"
+            android:textSize="64sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/left_score"
+            android:importantForAutofill="no"
+            tools:ignore="LabelFor"
+            />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
