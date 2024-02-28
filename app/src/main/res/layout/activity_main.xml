@@ -20,24 +20,38 @@
     <!--        app:layout_constraintStart_toStartOf="parent"-->
     <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/top_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/material_dynamic_neutral90"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu="@menu/top_menu"
+        app:title="@string/top_app_bar_title"
+        app:titleCentered="true" />
+
     <ImageButton
-        android:id="@+id/bt_button"
+        android:id="@+id/bluetooth_btn"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_marginStart="128dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="229dp"
         android:contentDescription="@string/bt_btn_content_desc"
         android:longClickable="true"
         android:padding="5dp"
         android:scaleType="fitCenter"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.009"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/top_app_bar"
         app:srcCompat="@drawable/bluetooth" />
 
-
     <LinearLayout
+        android:id="@+id/score_linear_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
@@ -54,17 +68,15 @@
             android:layout_height="wrap_content"
             android:background="@drawable/score_border"
             android:ems="10"
-            android:gravity="center_horizontal|center_vertical"
-            android:inputType="none"
             android:focusable="false"
+            android:gravity="center_horizontal|center_vertical"
+            android:importantForAutofill="no"
+            android:inputType="none"
             android:padding="4dp"
             android:text="0"
             android:textSize="64sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:layout_editor_absoluteX="90dp"
-            android:importantForAutofill="no"
-            tools:ignore="LabelFor"
-            />
+            tools:ignore="LabelFor" />
 
         <EditText
             android:id="@+id/right_score"
@@ -73,18 +85,139 @@
             android:layout_height="wrap_content"
             android:background="@drawable/score_border"
             android:ems="10"
-            android:gravity="center_horizontal|center_vertical"
-            android:inputType="none"
             android:focusable="false"
+            android:gravity="center_horizontal|center_vertical"
+            android:importantForAutofill="no"
+            android:inputType="none"
             android:padding="4dp"
             android:text="0"
             android:textSize="64sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/left_score"
-            android:importantForAutofill="no"
-            tools:ignore="LabelFor"
-            />
+            tools:ignore="LabelFor" />
 
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/increment_btn"
+        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_marginBottom="23dp"
+        android:text="@string/increment_txt"
+        android:textSize="26sp"
+        app:backgroundTint="@color/material_dynamic_neutral20"
+        app:cornerRadius="45dp"
+        app:layout_constraintBottom_toTopOf="@+id/ok_cancel_linear_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/ok_cancel_linear_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancel_btn"
+            style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:textSize="26sp"
+            app:backgroundTint="@android:color/holo_red_dark"
+            app:cornerRadius="40dp"
+            app:icon="@drawable/cancel"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="40dp"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/reset_btn"
+            style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="20dp"
+            android:text="@string/reset_btn_txt"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            app:backgroundTint="@android:color/holo_orange_light"
+            app:cornerRadius="40dp"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ok_btn"
+            style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="20dp"
+            android:textSize="26sp"
+            app:backgroundTint="@android:color/holo_green_dark"
+            app:cornerRadius="40dp"
+            app:icon="@drawable/check"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="40dp"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/decrement_btn"
+        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="23dp"
+        android:text="@string/decrement_txt"
+        android:textSize="26sp"
+        app:backgroundTint="@color/material_dynamic_neutral50"
+        app:cornerRadius="35dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ok_cancel_linear_layout" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/swap_btn"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="8dp"
+        android:textSize="26sp"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="40dp"
+        app:icon="@drawable/swap"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="78dp"
+        app:iconTint="@android:color/holo_orange_dark"
+        app:layout_constraintBottom_toTopOf="@+id/score_linear_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/move_up_double_arrow_btn"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginBottom="10dp"
+        android:textSize="26sp"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="40dp"
+        app:icon="@drawable/double_arrow_move_up"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="60dp"
+        app:iconTint="@android:color/holo_orange_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/score_linear_layout" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,10 +27,10 @@ class MainActivity : AppCompatActivity() {
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
             onConnect = {
-                mainBinding.btButton.setImageResource(R.drawable.bluetooth_connected)
+                mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
             }
             onDisconnect = {
-                mainBinding.btButton.setImageResource(R.drawable.bluetooth)
+                mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
                 Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
                     Toast.LENGTH_LONG).show()
             }
@@ -97,16 +97,31 @@ class MainActivity : AppCompatActivity() {
 
         ConnectionManager.registerListener(connectionEventListener)
 
-        mainBinding.btButton.setOnClickListener {
-            this.onBtButtonClick()
+        mainBinding.bluetoothBtn.setOnClickListener {
+            this.onBluetoothBtnClick()
         }
 
-        mainBinding.btButton.setOnLongClickListener {
+        mainBinding.bluetoothBtn.setOnLongClickListener {
             // TODO disconnect only specific device(s)
             ConnectionManager.disconnectAllDevices()
             true
         }
     }
+
+//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        menuInflater.inflate(R.menu.top_menu, menu)
+//        return true
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        when (item.itemId) {
+//            R.id.settings_menu_item -> {
+//                // TODO
+//            }
+//        }
+//
+//        return true
+//    }
 
     override fun onStart() {
         super.onStart()
@@ -165,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onBtButtonClick() {
+    private fun onBluetoothBtnClick() {
         if (this.isBleSupported()) {
 
             if (this.hasBtPermissions()) {
