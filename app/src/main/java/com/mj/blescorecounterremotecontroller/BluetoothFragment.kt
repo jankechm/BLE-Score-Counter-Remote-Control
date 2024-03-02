@@ -173,6 +173,9 @@ class BluetoothFragment : DialogFragment() {
         if (this.alreadyConnected) {
             disconnectBtn.visibility = View.VISIBLE
         }
+        else {
+            disconnectBtn.visibility = View.INVISIBLE
+        }
 
         foundDevices.layoutManager = LinearLayoutManager(context)
         foundDevices.adapter = bleDevicesAdapter
