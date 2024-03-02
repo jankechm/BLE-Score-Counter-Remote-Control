@@ -14,4 +14,5 @@
     <string name="settings_title">Settings</string>
     <string name="top_app_bar_title">BLE Score Counter</string>
     <string name="reset_btn_txt">0:0</string>
+    <string name="bluetooth_title">Bluetooth</string>
 </resources>

@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,12 +28,20 @@ class MainActivity : AppCompatActivity() {
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
             onConnect = {
-                mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
+                runOnUiThread {
+                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
+                    mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
+                        ?.setIcon(R.drawable.bluetooth_connected)
+                }
             }
             onDisconnect = {
-                mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
-                Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
-                    Toast.LENGTH_LONG).show()
+                runOnUiThread {
+                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
+                    mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
+                        ?.setIcon(R.drawable.bluetooth_disabled)
+                    Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
+                        Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -97,21 +106,38 @@ class MainActivity : AppCompatActivity() {
 
         ConnectionManager.registerListener(connectionEventListener)
 
+        this.setSupportActionBar(mainBinding.topAppBar)
+
         mainBinding.bluetoothBtn.setOnClickListener {
             this.onBluetoothBtnClick()
         }
 
-        mainBinding.bluetoothBtn.setOnLongClickListener {
-            // TODO disconnect only specific device(s)
-            ConnectionManager.disconnectAllDevices()
-            true
+        mainBinding.topAppBar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.bluetooth_menu_item -> {
+                    this.onBluetoothBtnClick()
+                    true
+                }
+
+                R.id.settings_menu_item -> {
+                    // TODO
+                    true
+                }
+
+                else -> { false }
+            }
         }
+
+//        mainBinding.bluetoothBtn.setOnLongClickListener {
+//            ConnectionManager.disconnectAllDevices()
+//            true
+//        }
     }
 
-//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-//        menuInflater.inflate(R.menu.top_menu, menu)
-//        return true
-//    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.top_menu, menu)
+        return true
+    }
 //
 //    override fun onOptionsItemSelected(item: MenuItem): Boolean {
 //        when (item.itemId) {
