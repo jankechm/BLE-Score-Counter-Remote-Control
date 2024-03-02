@@ -29,14 +29,14 @@ class MainActivity : AppCompatActivity() {
         ConnectionEventListener().apply {
             onConnect = {
                 runOnUiThread {
-                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
+//                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
                     mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
                         ?.setIcon(R.drawable.bluetooth_connected)
                 }
             }
             onDisconnect = {
                 runOnUiThread {
-                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
+//                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
                     mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
                         ?.setIcon(R.drawable.bluetooth_disabled)
                     Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
 
         this.setSupportActionBar(mainBinding.topAppBar)
 
-        mainBinding.bluetoothBtn.setOnClickListener {
-            this.onBluetoothBtnClick()
-        }
+//        mainBinding.bluetoothBtn.setOnClickListener {
+//            this.onBluetoothBtnClick()
+//        }
 
         mainBinding.topAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -127,11 +127,6 @@ class MainActivity : AppCompatActivity() {
                 else -> { false }
             }
         }
-
-//        mainBinding.bluetoothBtn.setOnLongClickListener {
-//            ConnectionManager.disconnectAllDevices()
-//            true
-//        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -142,7 +137,6 @@ class MainActivity : AppCompatActivity() {
 //    override fun onOptionsItemSelected(item: MenuItem): Boolean {
 //        when (item.itemId) {
 //            R.id.settings_menu_item -> {
-//                // TODO
 //            }
 //        }
 //
