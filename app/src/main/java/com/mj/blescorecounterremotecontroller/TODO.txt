@@ -1,3 +1,20 @@
+Discovered 3 services for C5:3C:C9:60:11:4D.
+Service 00001800-0000-1000-8000-00805f9b34fb
+Characteristics:
+|--00002a00-0000-1000-8000-00805f9b34fb: READABLE
+|--00002a01-0000-1000-8000-00805f9b34fb: READABLE
+|--00002a02-0000-1000-8000-00805f9b34fb: READABLE
+|--00002a04-0000-1000-8000-00805f9b34fb: READABLE
+Service 00001801-0000-1000-8000-00805f9b34fb
+Characteristics:
+|--00002a05-0000-1000-8000-00805f9b34fb: INDICATABLE
+|------00002902-0000-1000-8000-00805f9b34fb: EMPTY
+Service 0000ffe0-0000-1000-8000-00805f9b34fb
+Characteristics:
+|--0000ffe1-0000-1000-8000-00805f9b34fb: WRITABLE, WRITABLE WITHOUT RESPONSE, NOTIFIABLE
+|------00002902-0000-1000-8000-00805f9b34fb: EMPTY
+|--0000ffe2-0000-1000-8000-00805f9b34fb: WRITABLE, WRITABLE WITHOUT RESPONSE
+
 
 - Create Settings in top panel
 	- Add option to specify if the app should automatically connect to lastly connected BT device on startup.
@@ -12,5 +29,5 @@
 - Disconnect specific device instead of all.
     - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
       device to disconnect from if needed?
-- If already connected to a GATT device, disconnect first before connecting to another?
+- Make Cancel, Reset, OK button displayed with the shadow under them.
 

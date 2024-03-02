@@ -3,6 +3,7 @@ package com.mj.blescorecounterremotecontroller
 import android.Manifest
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.IntentFilter
@@ -27,18 +28,31 @@ class MainActivity : AppCompatActivity() {
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
-            onConnect = {
+            onConnect = { btDevice ->
                 runOnUiThread {
-//                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth_connected)
-                    mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
-                        ?.setIcon(R.drawable.bluetooth_connected)
+                    val btMenuItem = mainBinding.topAppBar.menu.
+                        findItem(R.id.bluetooth_menu_item)
+                    btMenuItem?.let {
+                        it.iconTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.bt_connected)
+                        it.setIcon(R.drawable.bluetooth_connected)
+                    }
+                    bleDisplay = btDevice
+                    isDisplayConnected = true
                 }
             }
             onDisconnect = {
                 runOnUiThread {
-//                    mainBinding.bluetoothBtn.setImageResource(R.drawable.bluetooth)
-                    mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)
-                        ?.setIcon(R.drawable.bluetooth_disabled)
+                    val btMenuItem = mainBinding.topAppBar.menu.
+                        findItem(R.id.bluetooth_menu_item)
+                    btMenuItem?.let {
+                        it.iconTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.bt_disconnected
+                        )
+                        it.setIcon(R.drawable.bluetooth_disabled)
+                    }
+                    bleDisplay = null
+                    isDisplayConnected = false
                     Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
                         Toast.LENGTH_LONG).show()
                 }
@@ -85,11 +99,11 @@ class MainActivity : AppCompatActivity() {
 //    private val scanResults = mutableListOf<ScanResult>()
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
-//    private var scanning = false
+    private var isDisplayConnected = false
     private var permissionsPermanentlyDenied = false
+    private var bleDisplay: BluetoothDevice? = null
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
-//    private lateinit var bleScanner: BluetoothLeScanner
     private lateinit var mainBinding: ActivityMainBinding
 
 
@@ -107,10 +121,6 @@ class MainActivity : AppCompatActivity() {
         ConnectionManager.registerListener(connectionEventListener)
 
         this.setSupportActionBar(mainBinding.topAppBar)
-
-//        mainBinding.bluetoothBtn.setOnClickListener {
-//            this.onBluetoothBtnClick()
-//        }
 
         mainBinding.topAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -222,7 +232,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayBtFragment() {
-        val btFragment = BluetoothFragment.newInstance(false)
+        val btFragment = BluetoothFragment.newInstance(isDisplayConnected)
         btFragment.show(supportFragmentManager, "BluetoothFragment")
     }
 
