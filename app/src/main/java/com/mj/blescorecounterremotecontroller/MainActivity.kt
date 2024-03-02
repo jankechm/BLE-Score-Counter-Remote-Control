@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.IntentFilter
@@ -39,6 +40,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     bleDisplay = btDevice
                     isDisplayConnected = true
+                    writableDisplayChar = ConnectionManager.findCharacteristic(
+                        btDevice, Constants.DISPLAY_CHARACTERISTIC_TO_WRITE_UUID)
                 }
             }
             onDisconnect = {
@@ -53,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     bleDisplay = null
                     isDisplayConnected = false
+                    writableDisplayChar = null
                     Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
                         Toast.LENGTH_LONG).show()
                 }
@@ -102,6 +106,7 @@ class MainActivity : AppCompatActivity() {
     private var isDisplayConnected = false
     private var permissionsPermanentlyDenied = false
     private var bleDisplay: BluetoothDevice? = null
+    private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
@@ -135,6 +140,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 else -> { false }
+            }
+        }
+
+        mainBinding.okBtn.setOnClickListener {
+            if (bleDisplay != null && writableDisplayChar != null) {
+                val updateScoreCmd = Constants.SET_BOTH_SCORE_CMD_PREFIX + "11:9"
+                ConnectionManager.writeCharacteristic(bleDisplay!!, writableDisplayChar!!,
+                    updateScoreCmd.toByteArray(Charsets.US_ASCII))
             }
         }
     }

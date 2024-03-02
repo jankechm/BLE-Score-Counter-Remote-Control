@@ -25,6 +25,12 @@ object ConnectionManager {
     private var pendingOperation: BleOperationType? = null
 
 
+    fun findCharacteristic(
+        device: BluetoothDevice,
+        characteristicId: String
+    ): BluetoothGattCharacteristic? =
+        deviceGattMap[device]?.findCharacteristic(UUID.fromString(characteristicId))
+
     fun registerListener(listener: ConnectionEventListener) {
         if (listeners.map { it.get() }.none { it?.equals(listener) == true }) {
             listeners.add(WeakReference(listener))

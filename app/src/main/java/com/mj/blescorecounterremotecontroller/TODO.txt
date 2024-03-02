@@ -30,4 +30,7 @@ Characteristics:
     - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
       device to disconnect from if needed?
 - Make Cancel, Reset, OK button displayed with the shadow under them.
+- Instead of universal +1 and -1 buttons, replace them with specific buttons for each score part.
+    - One button for both increment/decrement?
+    - move_score button will be above the score, swap button will be under the score.
 
