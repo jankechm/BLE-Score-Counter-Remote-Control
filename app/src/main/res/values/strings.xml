@@ -7,7 +7,7 @@
     <string name="found_devices_content_desc">Found Devices</string>
     <string name="bt_device_name">Name: %1$s</string>
     <string name="bt_device_mac_address">MAC address: %1$s</string>
-    <string name="ok_btn_text">OK</string>
+<!--    <string name="ok_btn_text">OK</string>-->
 <!--    <string name="increment_txt">+1</string>-->
 <!--    <string name="decrement_txt">-1</string>-->
     <string name="settings_title">Settings</string>
@@ -15,4 +15,8 @@
     <string name="reset_btn_txt">0:0</string>
     <string name="bluetooth_title">Bluetooth</string>
     <string name="increment_decrement_txt">±1</string>
+    <string name="cancel_content_desc">Cancel</string>
+    <string name="ok_content_desc">OK</string>
+    <string name="move_score_content_desc">Move Score</string>
+    <string name="swap_score_content_desc">Swap Score</string>
 </resources>
