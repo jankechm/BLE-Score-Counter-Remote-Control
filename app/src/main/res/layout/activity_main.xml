@@ -93,6 +93,7 @@
         </LinearLayout>
 
         <View
+            android:id="@+id/score_stand"
             android:layout_width="match_parent"
             android:layout_height="10dp"
             android:background="@android:color/black"/>
@@ -243,21 +244,22 @@
 <!--        app:layout_constraintStart_toStartOf="parent" />-->
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/move_score_double_arrow_btn"
+        android:id="@+id/move_btn"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:textSize="26sp"
         android:contentDescription="@string/move_score_content_desc"
         app:backgroundTint="@android:color/transparent"
         app:cornerRadius="40dp"
-        app:icon="@drawable/double_arrow_move_up"
+        app:icon="@drawable/move_up"
         app:iconGravity="textStart"
         app:iconPadding="0dp"
         app:iconSize="60dp"
         app:iconTint="@android:color/holo_orange_dark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_app_bar" />
+        app:layout_constraintTop_toBottomOf="@+id/top_app_bar"
+        />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/swap_btn"
@@ -276,7 +278,7 @@
         app:layout_constraintBottom_toTopOf="@+id/ok_cancel_linear_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/move_score_double_arrow_btn" />
+        app:layout_constraintTop_toBottomOf="@+id/move_btn" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
