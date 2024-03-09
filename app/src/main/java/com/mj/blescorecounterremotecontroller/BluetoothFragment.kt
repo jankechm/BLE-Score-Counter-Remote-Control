@@ -110,15 +110,11 @@ class BluetoothFragment : DialogFragment() {
         ConnectionEventListener().apply {
             onConnect = {
                 handler.post {
-                    Toast.makeText(context,
-                        "Connected to ${it.address}", Toast.LENGTH_LONG).show()
                     dialog?.dismiss()
                 }
             }
             onDisconnect = {
                 handler.post {
-                    Toast.makeText(context, "Disconnected from ${it.address}",
-                        Toast.LENGTH_LONG).show()
                     dialog?.dismiss()
                 }
             }

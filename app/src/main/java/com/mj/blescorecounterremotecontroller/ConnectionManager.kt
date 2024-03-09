@@ -523,7 +523,9 @@ object ConnectionManager {
             with(characteristic) {
                 Log.i(Constants.BT_TAG,"Characteristic $uuid changed | " +
                         "value: ${value.toHexString()}")
-                listeners.forEach { it.get()?.onCharacteristicChanged?.invoke(gatt.device, this) }
+                listeners.forEach { it.get()?.onCharacteristicChanged?.invoke(
+                    gatt.device, this, value
+                ) }
             }
         }
 
@@ -574,11 +576,13 @@ object ConnectionManager {
             with(descriptor) {
                 when (status) {
                     BluetoothGatt.GATT_SUCCESS -> {
-                        Log.i(Constants.BT_TAG,"Wrote to descriptor $uuid | " +
-                                "value: ${value.toHexString()}")
+                        Log.i(Constants.BT_TAG,"Wrote to descriptor $uuid")
 
                         if (isCccd()) {
-                            onCccdWrite(gatt, value, characteristic)
+//                            onCccdWrite(gatt, value, characteristic)
+                            listeners.forEach {
+                                it.get()?.onCCCDWrite?.invoke(gatt.device, this)
+                            }
                         } else {
                             listeners.forEach {
                                 it.get()?.onDescriptorWrite?.invoke(gatt.device, this)
@@ -605,38 +609,38 @@ object ConnectionManager {
             }
         }
 
-        private fun onCccdWrite(
-            gatt: BluetoothGatt,
-            value: ByteArray,
-            characteristic: BluetoothGattCharacteristic
-        ) {
-            val charUuid = characteristic.uuid
-            val notificationsEnabled =
-                value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
-                        value.contentEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
-            val notificationsDisabled =
-                value.contentEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
-
-            when {
-                notificationsEnabled -> {
-                    Log.w(Constants.BT_TAG,"Notifications or indications ENABLED on $charUuid")
-                    listeners.forEach {
-                        it.get()?.onNotificationsEnabled?.invoke(gatt.device, characteristic)
-                    }
-                }
-                notificationsDisabled -> {
-                    Log.w(Constants.BT_TAG,
-                        "Notifications or indications DISABLED on $charUuid")
-                    listeners.forEach {
-                        it.get()?.onNotificationsDisabled?.invoke(gatt.device, characteristic)
-                    }
-                }
-                else -> {
-                    Log.e(Constants.BT_TAG,
-                        "Unexpected value ${value.toHexString()} on CCCD of $charUuid")
-                }
-            }
-        }
+//        private fun onCccdWrite(
+//            gatt: BluetoothGatt,
+//            value: ByteArray,
+//            characteristic: BluetoothGattCharacteristic
+//        ) {
+//            val charUuid = characteristic.uuid
+//            val notificationsEnabled =
+//                value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
+//                        value.contentEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
+//            val notificationsDisabled =
+//                value.contentEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+//
+//            when {
+//                notificationsEnabled -> {
+//                    Log.w(Constants.BT_TAG,"Notifications or indications ENABLED on $charUuid")
+//                    listeners.forEach {
+//                        it.get()?.onNotificationsEnabled?.invoke(gatt.device, characteristic)
+//                    }
+//                }
+//                notificationsDisabled -> {
+//                    Log.w(Constants.BT_TAG,
+//                        "Notifications or indications DISABLED on $charUuid")
+//                    listeners.forEach {
+//                        it.get()?.onNotificationsDisabled?.invoke(gatt.device, characteristic)
+//                    }
+//                }
+//                else -> {
+//                    Log.e(Constants.BT_TAG,
+//                        "Unexpected value ${value.toHexString()} on CCCD of $charUuid")
+//                }
+//            }
+//        }
     }
 
     private fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)

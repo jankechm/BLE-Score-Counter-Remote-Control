@@ -29,5 +29,8 @@ Characteristics:
 - Disconnect specific device instead of all.
     - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
       device to disconnect from if needed?
+- The OK/Send button could be visible all the time, to have the ability to update score second time,
+  in case the CMD was not received by the BLE display on first time.
+    - In that case, only one SET_SCORE command would be needed.
 
 

@@ -20,6 +20,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
 
 
@@ -31,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
-            onConnect = { btDevice ->
+            onMtuChanged = { btDevice, mtu ->
                 runOnUiThread {
                     val btMenuItem = mainBinding.topAppBar.menu.
                         findItem(R.id.bluetooth_menu_item)
@@ -43,7 +44,22 @@ class MainActivity : AppCompatActivity() {
                     bleDisplay = btDevice
                     isDisplayConnected = true
                     writableDisplayChar = ConnectionManager.findCharacteristic(
-                        btDevice, Constants.DISPLAY_CHARACTERISTIC_TO_WRITE_UUID)
+                        btDevice, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
+                    writableDisplayChar?.let {
+                        enablingNotification = true
+                        ConnectionManager.enableNotifications(btDevice, it)
+                    }
+
+                    Toast.makeText(this@MainActivity,
+                        "Connected to ${btDevice.address}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            onCCCDWrite = { btDevice, descriptor ->
+                runOnUiThread {
+                    if (enablingNotification) {
+                        Log.i(Constants.BT_TAG, "Enabled notification")
+                        enablingNotification = false
+                    }
                 }
             }
             onDisconnect = {
@@ -59,8 +75,23 @@ class MainActivity : AppCompatActivity() {
                     bleDisplay = null
                     isDisplayConnected = false
                     writableDisplayChar = null
+
                     Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
-                        Toast.LENGTH_LONG).show()
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+            onCharacteristicChanged = { bleDevice, characteristic, value ->
+                runOnUiThread {
+                    val valSize = value.size
+                    if (valSize > 2 && value[valSize-2].toInt() == '\r'.code &&
+                        value[valSize-1].toInt() == '\n'.code) {
+                            val decoded = value.copyOf(valSize - 2)
+                                .toString(Charsets.US_ASCII)
+
+                            Log.i(Constants.BT_TAG, "Received: $decoded")
+                            Toast.makeText(this@MainActivity, "Received: $decoded",
+                                Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -107,9 +138,12 @@ class MainActivity : AppCompatActivity() {
 
     private var isDisplayConnected = false
     private var permissionsPermanentlyDenied = false
+    private var enablingNotification = false
     private var isScoreDown = true
     private var bleDisplay: BluetoothDevice? = null
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
+    private var lastScore: Score = Score(0, 0)
+    private var newScore: Score = Score(0, 0)
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
@@ -147,15 +181,52 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.okBtn.setOnClickListener {
-            if (bleDisplay != null && writableDisplayChar != null) {
-                val updateScoreCmd = Constants.SET_BOTH_SCORE_CMD_PREFIX + "11:9"
-                ConnectionManager.writeCharacteristic(bleDisplay!!, writableDisplayChar!!,
-                    updateScoreCmd.toByteArray(Charsets.US_ASCII))
+            if (bleDisplay != null) {
+//                if (writableDisplayChar == null) {
+//                    writableDisplayChar = ConnectionManager.findCharacteristic(
+//                        bleDisplay!!, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
+//                }
+                if (writableDisplayChar != null) {
+                    val updateScoreCmd = Constants.SET_BOTH_SCORE_CMD_PREFIX + "11:9" +
+                            Constants.CRLF
+                    ConnectionManager.writeCharacteristic(bleDisplay!!, writableDisplayChar!!,
+                        updateScoreCmd.toByteArray(Charsets.US_ASCII))
+                }
             }
         }
 
         mainBinding.moveBtn.setOnClickListener {
             this.onMoveBtnClick()
+        }
+
+        mainBinding.leftScoreBtn.setOnClickListener {
+            if (newScore.left < Constants.MAX_SCORE) {
+                newScore.left += 1
+                mainBinding.okBtn.isVisible = true
+            }
+        }
+
+        mainBinding.leftScoreBtn.setOnLongClickListener {
+            if (newScore.left > Constants.MIN_SCORE) {
+                newScore.left -= 1
+                mainBinding.okBtn.isVisible = true
+            }
+            true
+        }
+
+        mainBinding.rightScoreBtn.setOnClickListener {
+            if (newScore.right < Constants.MAX_SCORE) {
+                newScore.right += 1
+                mainBinding.okBtn.isVisible = true
+            }
+        }
+
+        mainBinding.rightScoreBtn.setOnLongClickListener {
+            if (newScore.right > Constants.MIN_SCORE) {
+                newScore.right -= 1
+                mainBinding.okBtn.isVisible = true
+            }
+            true
         }
     }
 
