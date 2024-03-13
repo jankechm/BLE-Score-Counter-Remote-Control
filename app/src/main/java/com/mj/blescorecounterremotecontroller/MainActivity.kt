@@ -16,8 +16,6 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -139,7 +137,7 @@ class MainActivity : AppCompatActivity() {
     private var isDisplayConnected = false
     private var permissionsPermanentlyDenied = false
     private var enablingNotification = false
-    private var isScoreDown = true
+    private var isScoreFacingUp = true
     private var bleDisplay: BluetoothDevice? = null
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
     private var lastScore: Score = Score(0, 0)
@@ -328,32 +326,34 @@ class MainActivity : AppCompatActivity() {
         val scoreVerticalLL = mainBinding.scoreVerticalLinearLayout
         val scoreHorizontalLL = mainBinding.scoreHorizontalLinearLayout
         val scoreStand = mainBinding.scoreStand
+        val direction1 = mainBinding.scoreDirection1
+        val direction2 = mainBinding.scoreDirection2
 
-        val moveBtnLayoutParams = moveBtn.layoutParams
-                as ConstraintLayout.LayoutParams
-        val swapBtnLayoutParams = mainBinding.swapBtn.layoutParams
-                as ConstraintLayout.LayoutParams
-        val scoreVerticalLLParams = scoreVerticalLL.layoutParams
-                as ConstraintLayout.LayoutParams
-        val incDecLLParams =
-            mainBinding.incrementDecrementLinearLayout.layoutParams as ConstraintLayout.LayoutParams
+//        val moveBtnLayoutParams = moveBtn.layoutParams
+//                as ConstraintLayout.LayoutParams
+//        val swapBtnLayoutParams = mainBinding.swapBtn.layoutParams
+//                as ConstraintLayout.LayoutParams
+//        val scoreVerticalLLParams = scoreVerticalLL.layoutParams
+//                as ConstraintLayout.LayoutParams
+//        val incDecLLParams =
+//            mainBinding.incrementDecrementLinearLayout.layoutParams as ConstraintLayout.LayoutParams
 
-        if (isScoreDown) {
-            moveBtnLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            moveBtnLayoutParams.topToBottom = ConstraintSet.UNSET
-
-            swapBtnLayoutParams.topToBottom = R.id.ok_cancel_linear_layout
-            swapBtnLayoutParams.bottomToTop = R.id.move_btn
-
-            scoreVerticalLLParams.bottomToBottom = ConstraintSet.UNSET
-            scoreVerticalLLParams.topToBottom = R.id.top_app_bar
-            scoreVerticalLLParams.bottomMargin = 0
-            scoreVerticalLLParams.topMargin = this.dpToPixels(10)
-
-            incDecLLParams.bottomToTop = ConstraintSet.UNSET
-            incDecLLParams.topToBottom = R.id.score_vertical_linear_layout
-            incDecLLParams.bottomMargin = 0
-            incDecLLParams.topMargin = this.dpToPixels(10)
+        if (isScoreFacingUp) {
+//            moveBtnLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+//            moveBtnLayoutParams.topToBottom = ConstraintSet.UNSET
+//
+//            swapBtnLayoutParams.topToBottom = R.id.ok_cancel_linear_layout
+//            swapBtnLayoutParams.bottomToTop = R.id.move_btn
+//
+//            scoreVerticalLLParams.bottomToBottom = ConstraintSet.UNSET
+//            scoreVerticalLLParams.topToBottom = R.id.top_app_bar
+//            scoreVerticalLLParams.bottomMargin = 0
+//            scoreVerticalLLParams.topMargin = this.dpToPixels(10)
+//
+//            incDecLLParams.bottomToTop = ConstraintSet.UNSET
+//            incDecLLParams.topToBottom = R.id.score_vertical_linear_layout
+//            incDecLLParams.bottomMargin = 0
+//            incDecLLParams.topMargin = this.dpToPixels(10)
 
             // Swapping the score_horizontal_linear_layout with score_stand, which
             // basically means removing them from the outer LinearLayout and adding them
@@ -363,26 +363,29 @@ class MainActivity : AppCompatActivity() {
             scoreVerticalLL.addView(scoreStand)
             scoreVerticalLL.addView(scoreHorizontalLL)
 
-            moveBtn.setIconResource(R.drawable.move_down)
+            direction1.setImageResource(R.drawable.direct_down)
+            direction2.setImageResource(R.drawable.direct_down)
 
-            isScoreDown = false
+            moveBtn.setIconResource(R.drawable.arrow_up)
+
+            isScoreFacingUp = false
         }
         else {
-            moveBtnLayoutParams.bottomToBottom = ConstraintSet.UNSET
-            moveBtnLayoutParams.topToBottom = R.id.top_app_bar
-
-            swapBtnLayoutParams.topToBottom = R.id.move_btn
-            swapBtnLayoutParams.bottomToTop = R.id.ok_cancel_linear_layout
-
-            scoreVerticalLLParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            scoreVerticalLLParams.topToBottom = ConstraintSet.UNSET
-            scoreVerticalLLParams.bottomMargin = this.dpToPixels(10)
-            scoreVerticalLLParams.topMargin = 0
-
-            incDecLLParams.bottomToTop = R.id.score_vertical_linear_layout
-            incDecLLParams.topToBottom = ConstraintSet.UNSET
-            incDecLLParams.bottomMargin = this.dpToPixels(10)
-            incDecLLParams.topMargin = 0
+//            moveBtnLayoutParams.bottomToBottom = ConstraintSet.UNSET
+//            moveBtnLayoutParams.topToBottom = R.id.top_app_bar
+//
+//            swapBtnLayoutParams.topToBottom = R.id.move_btn
+//            swapBtnLayoutParams.bottomToTop = R.id.ok_cancel_linear_layout
+//
+//            scoreVerticalLLParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+//            scoreVerticalLLParams.topToBottom = ConstraintSet.UNSET
+//            scoreVerticalLLParams.bottomMargin = this.dpToPixels(10)
+//            scoreVerticalLLParams.topMargin = 0
+//
+//            incDecLLParams.bottomToTop = R.id.score_vertical_linear_layout
+//            incDecLLParams.topToBottom = ConstraintSet.UNSET
+//            incDecLLParams.bottomMargin = this.dpToPixels(10)
+//            incDecLLParams.topMargin = 0
 
             // Swapping the score_horizontal_linear_layout with score_stand, which
             // basically means removing them from the outer LinearLayout and adding them
@@ -392,9 +395,12 @@ class MainActivity : AppCompatActivity() {
             scoreVerticalLL.addView(scoreHorizontalLL)
             scoreVerticalLL.addView(scoreStand)
 
-            moveBtn.setIconResource(R.drawable.move_up)
+            direction1.setImageResource(R.drawable.direct_up)
+            direction2.setImageResource(R.drawable.direct_up)
 
-            isScoreDown = true
+            moveBtn.setIconResource(R.drawable.arrow_down)
+
+            isScoreFacingUp = true
         }
     }
 

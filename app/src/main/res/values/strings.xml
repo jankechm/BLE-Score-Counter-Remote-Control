@@ -14,9 +14,13 @@
     <string name="top_app_bar_title">BLE Score Counter</string>
     <string name="reset_btn_txt">0:0</string>
     <string name="bluetooth_title">Bluetooth</string>
-    <string name="increment_decrement_txt">±1</string>
+<!--    <string name="increment_decrement_txt">±1</string>-->
     <string name="cancel_content_desc">Cancel</string>
     <string name="ok_content_desc">OK</string>
     <string name="move_score_content_desc">Move Score</string>
     <string name="swap_score_content_desc">Swap Score</string>
+    <string name="decrement_txt">-1</string>
+    <string name="increment_txt">+1</string>
+    <string name="score_direction_1_content_desc">Score direction 1</string>
+    <string name="score_direction_2_content_desc">Score direction 2</string>
 </resources>

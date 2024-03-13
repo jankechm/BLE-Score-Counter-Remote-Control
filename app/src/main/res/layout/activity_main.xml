@@ -18,7 +18,27 @@
         app:title="@string/top_app_bar_title"
         app:titleCentered="true" />
 
-<!--    <ImageButton-->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/move_btn"
+        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp"
+        android:contentDescription="@string/swap_score_content_desc"
+        android:textSize="26sp"
+        app:backgroundTint="?attr/colorTertiary"
+        app:cornerRadius="40dp"
+        app:icon="@drawable/arrow_down"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="40dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/top_app_bar" />
+
+    <!--    <ImageButton-->
 <!--        android:id="@+id/bluetooth_btn"-->
 <!--        android:layout_width="70dp"-->
 <!--        android:layout_height="70dp"-->
@@ -35,71 +55,6 @@
 <!--        app:layout_constraintTop_toBottomOf="@+id/top_app_bar"-->
 <!--        app:srcCompat="@drawable/bluetooth" />-->
 
-    <LinearLayout
-        android:id="@+id/score_vertical_linear_layout"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        android:gravity="center_horizontal"
-        >
-
-        <LinearLayout
-            android:id="@+id/score_horizontal_linear_layout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
-
-            <EditText
-                android:id="@+id/left_score"
-                style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
-                android:layout_width="110dp"
-                android:layout_height="wrap_content"
-                android:background="@drawable/score_border"
-                android:ems="10"
-                android:focusable="false"
-                android:gravity="center_horizontal|center_vertical"
-                android:importantForAutofill="no"
-                android:inputType="none"
-                android:padding="4dp"
-                android:text="0"
-                android:textSize="64sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:ignore="LabelFor" />
-
-            <EditText
-                android:id="@+id/right_score"
-                style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
-                android:layout_width="110dp"
-                android:layout_height="wrap_content"
-                android:background="@drawable/score_border"
-                android:ems="10"
-                android:focusable="false"
-                android:gravity="center_horizontal|center_vertical"
-                android:importantForAutofill="no"
-                android:inputType="none"
-                android:padding="4dp"
-                android:text="0"
-                android:textSize="64sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/left_score"
-                tools:ignore="LabelFor" />
-
-        </LinearLayout>
-
-        <View
-            android:id="@+id/score_stand"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="@android:color/black"/>
-
-    </LinearLayout>
-
     <!--    <com.google.android.material.button.MaterialButton-->
 <!--        android:id="@+id/increment_btn"-->
 <!--        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"-->
@@ -114,6 +69,25 @@
 <!--        app:layout_constraintEnd_toEndOf="parent"-->
 <!--        app:layout_constraintHorizontal_bias="0.5"-->
 <!--        app:layout_constraintStart_toStartOf="parent" />-->
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/swap_btn"
+        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/swap_score_content_desc"
+        android:textSize="26sp"
+        app:backgroundTint="@android:color/holo_orange_dark"
+        app:cornerRadius="40dp"
+        app:icon="@drawable/swap"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/ok_cancel_linear_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/move_btn" />
 
     <LinearLayout
         android:id="@+id/increment_decrement_linear_layout"
@@ -130,12 +104,11 @@
             style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:text="@string/increment_decrement_txt"
+            android:text="@string/increment_txt"
             android:textSize="26sp"
             app:backgroundTint="@color/material_dynamic_neutral30"
             app:cornerRadius="45dp"
-            tools:layout_editor_absoluteX="112dp"
-            tools:layout_editor_absoluteY="467dp" />
+            />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/right_score_btn"
@@ -143,12 +116,128 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_marginStart="20dp"
-            android:text="@string/increment_decrement_txt"
+            android:text="@string/increment_txt"
             android:textSize="26sp"
             app:backgroundTint="@color/material_dynamic_neutral30"
             app:cornerRadius="45dp"
-            tools:layout_editor_absoluteX="112dp"
-            tools:layout_editor_absoluteY="467dp" />
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/score_vertical_linear_layout"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/decrement_linear_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:id="@+id/score_horizontal_linear_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/score_direction_1"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/direct_up"
+                android:contentDescription="@string/score_direction_1_content_desc" />
+
+            <EditText
+                android:id="@+id/left_score"
+                style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
+                android:layout_width="110dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/score_border"
+                android:ems="10"
+                android:focusable="false"
+                android:gravity="center_horizontal|center_vertical"
+                android:importantForAutofill="no"
+                android:inputType="none"
+                android:padding="4dp"
+                android:text="10"
+                android:textSize="64sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:ignore="LabelFor" />
+
+            <EditText
+                android:id="@+id/right_score"
+                style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
+                android:layout_width="110dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/score_border"
+                android:ems="10"
+                android:focusable="false"
+                android:gravity="center_horizontal|center_vertical"
+                android:importantForAutofill="no"
+                android:inputType="none"
+                android:padding="4dp"
+                android:text="7"
+                android:textSize="64sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/left_score"
+                tools:ignore="LabelFor" />
+
+            <ImageView
+                android:id="@+id/score_direction_2"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/direct_up"
+                android:contentDescription="@string/score_direction_2_content_desc"
+                />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/score_stand"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="@android:color/black" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/decrement_linear_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="90dp"
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/decr_left_score_btn"
+            style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:text="@string/decrement_txt"
+            android:textSize="26sp"
+            app:backgroundTint="@color/material_dynamic_neutral30"
+            app:cornerRadius="45dp"
+            />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/decr_right_score_btn"
+            style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="20dp"
+            android:text="@string/decrement_txt"
+            android:textSize="26sp"
+            app:backgroundTint="@color/material_dynamic_neutral30"
+            app:cornerRadius="45dp"
+            />
 
     </LinearLayout>
 
@@ -242,43 +331,6 @@
 <!--        app:layout_constraintEnd_toEndOf="parent"-->
 <!--        app:layout_constraintHorizontal_bias="0.501"-->
 <!--        app:layout_constraintStart_toStartOf="parent" />-->
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/move_btn"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:textSize="26sp"
-        android:contentDescription="@string/move_score_content_desc"
-        app:backgroundTint="@android:color/transparent"
-        app:cornerRadius="40dp"
-        app:icon="@drawable/move_up"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="60dp"
-        app:iconTint="@android:color/holo_orange_dark"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_app_bar"
-        />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/swap_btn"
-        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_weight="1"
-        android:textSize="26sp"
-        android:contentDescription="@string/swap_score_content_desc"
-        app:backgroundTint="@android:color/holo_orange_dark"
-        app:cornerRadius="40dp"
-        app:icon="@drawable/swap"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="50dp"
-        app:layout_constraintBottom_toTopOf="@+id/ok_cancel_linear_layout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/move_btn" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
