@@ -1,4 +1,4 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.view
 
 import android.Manifest
 import android.app.AlertDialog
@@ -15,11 +15,21 @@ import android.view.Menu
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.mj.blescorecounterremotecontroller.BtStateChangedReceiver
+import com.mj.blescorecounterremotecontroller.ConnectionEventListener
+import com.mj.blescorecounterremotecontroller.ConnectionManager
+import com.mj.blescorecounterremotecontroller.Constants
+import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
+import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -36,13 +46,15 @@ class MainActivity : AppCompatActivity() {
                         findItem(R.id.bluetooth_menu_item)
                     btMenuItem?.let {
                         it.iconTintList = ContextCompat.getColorStateList(
-                            this@MainActivity, R.color.bt_connected)
+                            this@MainActivity, R.color.bt_connected
+                        )
                         it.setIcon(R.drawable.bluetooth_connected)
                     }
                     bleDisplay = btDevice
                     isDisplayConnected = true
                     writableDisplayChar = ConnectionManager.findCharacteristic(
-                        btDevice, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
+                        btDevice, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID
+                    )
                     writableDisplayChar?.let {
                         enablingNotification = true
                         ConnectionManager.enableNotifications(btDevice, it)
@@ -140,12 +152,11 @@ class MainActivity : AppCompatActivity() {
     private var isScoreFacingUp = true
     private var bleDisplay: BluetoothDevice? = null
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
-    private var lastScore: Score = Score(0, 0)
-    private var newScore: Score = Score(0, 0)
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
 
+    private val scoreViewModel: ScoreViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -161,6 +172,22 @@ class MainActivity : AppCompatActivity() {
         ConnectionManager.registerListener(connectionEventListener)
 
         this.setSupportActionBar(mainBinding.topAppBar)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                scoreViewModel.score.collect {
+                    mainBinding.leftScore.setText(it.left.toString())
+                    mainBinding.rightScore.setText(it.right.toString())
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                scoreViewModel.isHeadingToTheReferee.collect {
+                    changeScoreOrientation(it)
+                }
+            }
+        }
 
         mainBinding.topAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -185,46 +212,58 @@ class MainActivity : AppCompatActivity() {
 //                        bleDisplay!!, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
 //                }
                 if (writableDisplayChar != null) {
-                    val updateScoreCmd = Constants.SET_BOTH_SCORE_CMD_PREFIX + "11:9" +
+                    val score = scoreViewModel.score.value
+
+                    val scoreToSend = if (isScoreFacingUp) {
+                        "${score.right}:${score.left}"
+                    } else {
+                        "${score.left}:${score.right}"
+                    }
+
+                    val updateScoreCmd = Constants.SET_SCORE_CMD_PREFIX + scoreToSend +
                             Constants.CRLF
-                    ConnectionManager.writeCharacteristic(bleDisplay!!, writableDisplayChar!!,
-                        updateScoreCmd.toByteArray(Charsets.US_ASCII))
+                    ConnectionManager.writeCharacteristic(
+                        bleDisplay!!, writableDisplayChar!!,
+                        updateScoreCmd.toByteArray(Charsets.US_ASCII)
+                    )
                 }
             }
+
+            scoreViewModel.confirmOrientation()
+            scoreViewModel.confirmNewScore()
+        }
+
+        mainBinding.cancelBtn.setOnClickListener {
+            scoreViewModel.revertOrientation()
+            scoreViewModel.revertScore()
         }
 
         mainBinding.moveBtn.setOnClickListener {
-            this.onMoveBtnClick()
+            scoreViewModel.toggleOrientation()
         }
 
-        mainBinding.leftScoreBtn.setOnClickListener {
-            if (newScore.left < Constants.MAX_SCORE) {
-                newScore.left += 1
-                mainBinding.okBtn.isVisible = true
-            }
+        mainBinding.swapBtn.setOnClickListener {
+            scoreViewModel.swapScore()
         }
 
-        mainBinding.leftScoreBtn.setOnLongClickListener {
-            if (newScore.left > Constants.MIN_SCORE) {
-                newScore.left -= 1
-                mainBinding.okBtn.isVisible = true
-            }
-            true
+        mainBinding.incrLeftScoreBtn.setOnClickListener {
+            scoreViewModel.incrementLeftScore()
         }
 
-        mainBinding.rightScoreBtn.setOnClickListener {
-            if (newScore.right < Constants.MAX_SCORE) {
-                newScore.right += 1
-                mainBinding.okBtn.isVisible = true
-            }
+        mainBinding.decrLeftScoreBtn.setOnClickListener {
+            scoreViewModel.decrementLeftScore()
         }
 
-        mainBinding.rightScoreBtn.setOnLongClickListener {
-            if (newScore.right > Constants.MIN_SCORE) {
-                newScore.right -= 1
-                mainBinding.okBtn.isVisible = true
-            }
-            true
+        mainBinding.incrRightScoreBtn.setOnClickListener {
+            scoreViewModel.incrementRightScore()
+        }
+
+        mainBinding.decrRightScoreBtn.setOnClickListener {
+            scoreViewModel.decrementRightScore()
+        }
+
+        mainBinding.resetBtn.setOnClickListener {
+            scoreViewModel.resetScore()
         }
     }
 
@@ -321,13 +360,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onMoveBtnClick() {
-        val moveBtn = mainBinding.moveBtn
-        val scoreVerticalLL = mainBinding.scoreVerticalLinearLayout
-        val scoreHorizontalLL = mainBinding.scoreHorizontalLinearLayout
-        val scoreStand = mainBinding.scoreStand
-        val direction1 = mainBinding.scoreDirection1
-        val direction2 = mainBinding.scoreDirection2
+//    private fun onMoveBtnClick() {
+//        val moveBtn = mainBinding.moveBtn
+//        val scoreVerticalLL = mainBinding.scoreVerticalLinearLayout
+//        val scoreHorizontalLL = mainBinding.scoreHorizontalLinearLayout
+//        val scoreStand = mainBinding.scoreStand
+//        val direction1 = mainBinding.scoreDirection1
+//        val direction2 = mainBinding.scoreDirection2
 
 //        val moveBtnLayoutParams = moveBtn.layoutParams
 //                as ConstraintLayout.LayoutParams
@@ -338,7 +377,7 @@ class MainActivity : AppCompatActivity() {
 //        val incDecLLParams =
 //            mainBinding.incrementDecrementLinearLayout.layoutParams as ConstraintLayout.LayoutParams
 
-        if (isScoreFacingUp) {
+//        if (isScoreFacingUp) {
 //            moveBtnLayoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
 //            moveBtnLayoutParams.topToBottom = ConstraintSet.UNSET
 //
@@ -355,22 +394,9 @@ class MainActivity : AppCompatActivity() {
 //            incDecLLParams.bottomMargin = 0
 //            incDecLLParams.topMargin = this.dpToPixels(10)
 
-            // Swapping the score_horizontal_linear_layout with score_stand, which
-            // basically means removing them from the outer LinearLayout and adding them
-            // again in a reverse order.
-            scoreVerticalLL.removeView(scoreHorizontalLL)
-            scoreVerticalLL.removeView(scoreStand)
-            scoreVerticalLL.addView(scoreStand)
-            scoreVerticalLL.addView(scoreHorizontalLL)
-
-            direction1.setImageResource(R.drawable.direct_down)
-            direction2.setImageResource(R.drawable.direct_down)
-
-            moveBtn.setIconResource(R.drawable.arrow_up)
-
-            isScoreFacingUp = false
-        }
-        else {
+//            isScoreFacingUp = false
+//        }
+//        else {
 //            moveBtnLayoutParams.bottomToBottom = ConstraintSet.UNSET
 //            moveBtnLayoutParams.topToBottom = R.id.top_app_bar
 //
@@ -387,6 +413,35 @@ class MainActivity : AppCompatActivity() {
 //            incDecLLParams.bottomMargin = this.dpToPixels(10)
 //            incDecLLParams.topMargin = 0
 
+//            isScoreFacingUp = true
+//        }
+
+//        scoreViewModel.swapScore()
+//    }
+
+    private fun changeScoreOrientation(scoreShouldHeadToTheReferee: Boolean) {
+        val moveBtn = mainBinding.moveBtn
+        val scoreVerticalLL = mainBinding.scoreVerticalLinearLayout
+        val scoreHorizontalLL = mainBinding.scoreHorizontalLinearLayout
+        val scoreStand = mainBinding.scoreStand
+        val direction1 = mainBinding.scoreDirection1
+        val direction2 = mainBinding.scoreDirection2
+
+        if (scoreShouldHeadToTheReferee) {
+            // Swapping the score_horizontal_linear_layout with score_stand, which
+            // basically means removing them from the outer LinearLayout and adding them
+            // again in a reverse order.
+            scoreVerticalLL.removeView(scoreHorizontalLL)
+            scoreVerticalLL.removeView(scoreStand)
+            scoreVerticalLL.addView(scoreStand)
+            scoreVerticalLL.addView(scoreHorizontalLL)
+
+            direction1.setImageResource(R.drawable.direct_down)
+            direction2.setImageResource(R.drawable.direct_down)
+
+            moveBtn.setIconResource(R.drawable.arrow_up)
+        }
+        else {
             // Swapping the score_horizontal_linear_layout with score_stand, which
             // basically means removing them from the outer LinearLayout and adding them
             // again in a reverse order.
@@ -399,8 +454,6 @@ class MainActivity : AppCompatActivity() {
             direction2.setImageResource(R.drawable.direct_up)
 
             moveBtn.setIconResource(R.drawable.arrow_down)
-
-            isScoreFacingUp = true
         }
     }
 

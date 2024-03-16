@@ -36,13 +36,3 @@ Characteristics:
 - The OK/Send button could be visible all the time, to have the ability to update score second time,
   in case the CMD was not received by the BLE display on first time.
     - In that case, only one SET_SCORE command would be needed.
-- Use MutableStateFlow for score. Update the StateFlow with update function.
-- Changing orientation of the score but not swapping score either on the phone, or on the BLE display
-  will cause the BLE display to be out of sync with the phone! It should swap the score on the phone
-  (only).
-    - The situation in which the score is swapped is important and 4 cases:
-        - the score is good on both devices
-        - the score is bad on BLE display but good on the phone
-        - the score is good on the BLE display but bad on the phone
-        - the score is bad on both devices
-- Swap button should at first swap score on the phone, than send it to the BLE display.

@@ -21,7 +21,7 @@ class Constants {
         const val GATT_MAX_MTU_SIZE = 517
         const val GATT_CUSTOM_MTU_SIZE = 46
 
-        const val SET_BOTH_SCORE_CMD_PREFIX = "SET_SCORE="
+        const val SET_SCORE_CMD_PREFIX = "SET_SCORE="
         const val CRLF = "\r\n"
 
         const val MIN_SCORE = 0

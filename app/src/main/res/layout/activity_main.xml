@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".view.MainActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/top_app_bar"
@@ -100,7 +100,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/left_score_btn"
+            android:id="@+id/incr_left_score_btn"
             style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
@@ -111,7 +111,7 @@
             />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/right_score_btn"
+            android:id="@+id/incr_right_score_btn"
             style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
