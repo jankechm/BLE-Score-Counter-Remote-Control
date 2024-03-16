@@ -91,6 +91,11 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT).show()
                 }
             }
+            onCharacteristicWrite = { bleDevice, characteristic ->
+                runOnUiThread {
+                    mainBinding.okBtn.visibility = View.INVISIBLE
+                }
+            }
             onCharacteristicChanged = { bleDevice, characteristic, value ->
                 runOnUiThread {
                     val valSize = value.size
@@ -229,6 +234,9 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
+            else {
+                mainBinding.okBtn.visibility = View.INVISIBLE
+            }
 
             scoreViewModel.confirmOrientation()
             scoreViewModel.confirmNewScore()
@@ -244,48 +252,56 @@ class MainActivity : AppCompatActivity() {
             scoreViewModel.revertScore()
 
             mainBinding.cancelBtn.visibility = View.INVISIBLE
+            mainBinding.okBtn.visibility = View.INVISIBLE
         }
 
         mainBinding.moveBtn.setOnClickListener {
             scoreViewModel.toggleOrientation()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.swapBtn.setOnClickListener {
             scoreViewModel.swapScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.incrLeftScoreBtn.setOnClickListener {
             scoreViewModel.incrementLeftScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrLeftScoreBtn.setOnClickListener {
             scoreViewModel.decrementLeftScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.incrRightScoreBtn.setOnClickListener {
             scoreViewModel.incrementRightScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrRightScoreBtn.setOnClickListener {
             scoreViewModel.decrementRightScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.resetBtn.setOnClickListener {
             scoreViewModel.resetScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
+            mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.scoreVerticalLinearLayout.setOnLongClickListener {

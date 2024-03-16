@@ -292,6 +292,7 @@
             android:layout_height="80dp"
             android:layout_marginStart="30dp"
             android:textSize="26sp"
+            android:visibility="invisible"
             android:contentDescription="@string/ok_content_desc"
             app:backgroundTint="@android:color/holo_green_dark"
             app:cornerRadius="40dp"
