@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -231,39 +232,75 @@ class MainActivity : AppCompatActivity() {
 
             scoreViewModel.confirmOrientation()
             scoreViewModel.confirmNewScore()
+
+            mainBinding.cancelBtn.visibility = View.INVISIBLE
+            mainBinding.moveBtn.visibility = View.INVISIBLE
+            mainBinding.swapBtn.visibility = View.INVISIBLE
+            mainBinding.resetBtn.visibility = View.INVISIBLE
         }
 
         mainBinding.cancelBtn.setOnClickListener {
             scoreViewModel.revertOrientation()
             scoreViewModel.revertScore()
+
+            mainBinding.cancelBtn.visibility = View.INVISIBLE
         }
 
         mainBinding.moveBtn.setOnClickListener {
             scoreViewModel.toggleOrientation()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.swapBtn.setOnClickListener {
             scoreViewModel.swapScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.incrLeftScoreBtn.setOnClickListener {
             scoreViewModel.incrementLeftScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrLeftScoreBtn.setOnClickListener {
             scoreViewModel.decrementLeftScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.incrRightScoreBtn.setOnClickListener {
             scoreViewModel.incrementRightScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrRightScoreBtn.setOnClickListener {
             scoreViewModel.decrementRightScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
         }
 
         mainBinding.resetBtn.setOnClickListener {
             scoreViewModel.resetScore()
+
+            mainBinding.cancelBtn.visibility = View.VISIBLE
+        }
+
+        mainBinding.scoreVerticalLinearLayout.setOnLongClickListener {
+            makeSpecialButtonsVisible()
+            true
+        }
+
+        mainBinding.leftScore.setOnLongClickListener {
+            makeSpecialButtonsVisible()
+            true
+        }
+
+        mainBinding.rightScore.setOnLongClickListener {
+            makeSpecialButtonsVisible()
+            true
         }
     }
 
@@ -455,6 +492,12 @@ class MainActivity : AppCompatActivity() {
 
             moveBtn.setIconResource(R.drawable.arrow_down)
         }
+    }
+
+    private fun makeSpecialButtonsVisible() {
+        mainBinding.moveBtn.visibility = View.VISIBLE
+        mainBinding.swapBtn.visibility = View.VISIBLE
+        mainBinding.resetBtn.visibility = View.VISIBLE
     }
 
     private fun displayBtFragment() {

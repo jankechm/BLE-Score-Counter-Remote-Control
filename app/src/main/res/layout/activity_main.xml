@@ -23,10 +23,11 @@
         style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_weight="1"
         android:layout_marginTop="20dp"
+        android:layout_weight="1"
         android:contentDescription="@string/swap_score_content_desc"
         android:textSize="26sp"
+        android:visibility="invisible"
         app:backgroundTint="?attr/colorTertiary"
         app:cornerRadius="40dp"
         app:icon="@drawable/arrow_down"
@@ -78,6 +79,7 @@
         android:layout_weight="1"
         android:contentDescription="@string/swap_score_content_desc"
         android:textSize="26sp"
+        android:visibility="invisible"
         app:backgroundTint="@android:color/holo_orange_dark"
         app:cornerRadius="40dp"
         app:icon="@drawable/swap"
@@ -151,7 +153,7 @@
                 android:src="@drawable/direct_up"
                 android:contentDescription="@string/score_direction_1_content_desc" />
 
-            <EditText
+            <TextView
                 android:id="@+id/left_score"
                 style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
                 android:layout_width="110dp"
@@ -168,7 +170,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 tools:ignore="LabelFor" />
 
-            <EditText
+            <TextView
                 android:id="@+id/right_score"
                 style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
                 android:layout_width="110dp"
@@ -223,7 +225,7 @@
             android:layout_height="80dp"
             android:text="@string/decrement_txt"
             android:textSize="26sp"
-            app:backgroundTint="@color/material_dynamic_neutral30"
+            app:backgroundTint="@color/material_dynamic_neutral50"
             app:cornerRadius="45dp"
             />
 
@@ -235,7 +237,7 @@
             android:layout_marginStart="20dp"
             android:text="@string/decrement_txt"
             android:textSize="26sp"
-            app:backgroundTint="@color/material_dynamic_neutral30"
+            app:backgroundTint="@color/material_dynamic_neutral50"
             app:cornerRadius="45dp"
             />
 
@@ -258,8 +260,9 @@
             style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:textSize="26sp"
             android:contentDescription="@string/cancel_content_desc"
+            android:textSize="26sp"
+            android:visibility="invisible"
             app:backgroundTint="@android:color/holo_red_dark"
             app:cornerRadius="40dp"
             app:icon="@drawable/cancel"
@@ -277,6 +280,7 @@
             android:text="@string/reset_btn_txt"
             android:textColor="@color/white"
             android:textSize="22sp"
+            android:visibility="invisible"
             app:backgroundTint="@android:color/holo_orange_light"
             app:cornerRadius="40dp"
             app:layout_constraintBottom_toBottomOf="parent" />
