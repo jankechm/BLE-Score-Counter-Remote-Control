@@ -1,9 +1,10 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.listener
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import com.mj.blescorecounterremotecontroller.ConnectionManager
 
 /** A listener containing callback methods to be registered with [ConnectionManager].*/
 class ConnectionEventListener {

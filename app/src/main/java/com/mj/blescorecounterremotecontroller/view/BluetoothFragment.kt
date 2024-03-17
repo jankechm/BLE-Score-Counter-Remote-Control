@@ -24,10 +24,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mj.blescorecounterremotecontroller.BLEDevicesAdapter
 import com.mj.blescorecounterremotecontroller.BLEScanner
-import com.mj.blescorecounterremotecontroller.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
+import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 
 
 /**

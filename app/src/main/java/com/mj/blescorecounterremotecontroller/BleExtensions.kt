@@ -1,5 +1,6 @@
 package com.mj.blescorecounterremotecontroller
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
@@ -106,3 +107,10 @@ fun BluetoothGattDescriptor.isCccd() =
 
 fun ByteArray.toHexString(): String =
     joinToString(separator = " ", prefix = "0x") { String.format("%02X", it) }
+
+fun Int.toBondStateDescription() = when(this) {
+    BluetoothDevice.BOND_BONDED -> "BONDED"
+    BluetoothDevice.BOND_BONDING -> "BONDING"
+    BluetoothDevice.BOND_NONE -> "NOT BONDED"
+    else -> "ERROR: $this"
+}

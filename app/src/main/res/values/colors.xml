@@ -4,4 +4,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bt_connected">#1565C0</color>
     <color name="bt_disconnected">#C62828</color>
+    <color name="encryption_on">#558B2F</color>
 </resources>

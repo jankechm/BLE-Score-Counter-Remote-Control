@@ -23,4 +23,5 @@
     <string name="increment_txt">+1</string>
     <string name="score_direction_1_content_desc">Score direction 1</string>
     <string name="score_direction_2_content_desc">Score direction 2</string>
+    <string name="encryption_title">Encrypted communication</string>
 </resources>

@@ -22,7 +22,7 @@ class ScoreViewModel : ViewModel() {
     val score: StateFlow<Score> = _score.asStateFlow()
 
     /**
-     * Previous value
+     * Previous Score value
      */
     private var prevScore = _score.value.copy()
 
@@ -30,9 +30,11 @@ class ScoreViewModel : ViewModel() {
     val isHeadingToTheReferee: StateFlow<Boolean> = _isHeadingToTheReferee.asStateFlow()
 
     /**
-     * Previous value
+     * Previous BLE display orientation value
      */
     private var wasHeadingToTheReferee = _isHeadingToTheReferee.value
+
+    var askToBond: Boolean = true
 
 
     fun incrementLeftScore() {
