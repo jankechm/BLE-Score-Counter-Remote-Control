@@ -24,8 +24,9 @@ Characteristics:
   to the BLE display, because it is the most recent change.
 
 - When successfully connected to the Score Counter, display a message on it's display. Either do it
-  just on it's display automatically, or send some command immediately. Also, indicate connection
-  on the phone.
+  just on it's display automatically, or send some command immediately.
+- If there was no change in the score, but still SET_SCORE command was delivered, blink just with
+  the colon.
 
 - Error status 133: when you see this status (or error 128), always try adding 60~100ms delay
   after the last successful operation.
@@ -35,3 +36,5 @@ Characteristics:
       device to disconnect from if needed?
 - Indicate changes in score: change = blue border; cancel = red border blink;
   confirmation = green border blink.
+- Remember last BLE device between app starts. Auto connect to it. Make it configurable.
+- Auto reconnect when BLE device reachable again.

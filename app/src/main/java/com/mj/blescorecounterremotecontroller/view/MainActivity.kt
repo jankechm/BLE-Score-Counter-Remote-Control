@@ -550,6 +550,8 @@ class MainActivity : AppCompatActivity() {
             direction2.setImageResource(R.drawable.direct_down)
 
             moveBtn.setIconResource(R.drawable.arrow_up)
+
+            isScoreFacingUp = false
         }
         else {
             // Swapping the score_horizontal_linear_layout with score_stand, which
@@ -564,6 +566,8 @@ class MainActivity : AppCompatActivity() {
             direction2.setImageResource(R.drawable.direct_up)
 
             moveBtn.setIconResource(R.drawable.arrow_down)
+
+            isScoreFacingUp = true
         }
     }
 
