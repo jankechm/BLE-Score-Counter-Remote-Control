@@ -33,6 +33,8 @@ import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 class MainActivity : AppCompatActivity() {
@@ -64,6 +66,19 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     handleBondState()
+
+                    // Send daytime to the BLE display
+                    val currDateTime = LocalDateTime.now()
+                    val formatter = DateTimeFormatter.ofPattern("e d.M.yy H:m:s")
+
+                    Log.i(Constants.BT_TAG,
+                        Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter))
+                    ConnectionManager.writeCharacteristic(
+                        bleDisplay!!, writableDisplayChar!!,
+                        (Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter) +
+                                Constants.CRLF).
+                            toByteArray(Charsets.US_ASCII)
+                    )
 
                     Toast.makeText(this@MainActivity,
                         "Connected to ${btDevice.address}", Toast.LENGTH_SHORT).show()
@@ -196,7 +211,6 @@ class MainActivity : AppCompatActivity() {
 
     private var permissionsPermanentlyDenied = false
     private var enablingNotification = false
-    private var isScoreFacingUp = true
     private var bleDisplay: BluetoothDevice? = null
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
@@ -224,8 +238,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 scoreViewModel.score.collect {
-                    mainBinding.leftScore.setText(it.left.toString())
-                    mainBinding.rightScore.setText(it.right.toString())
+                    mainBinding.leftScore.text = it.left.toString()
+                    mainBinding.rightScore.text = it.right.toString()
                 }
             }
         }
@@ -266,7 +280,7 @@ class MainActivity : AppCompatActivity() {
                 if (writableDisplayChar != null) {
                     val score = scoreViewModel.score.value
 
-                    val scoreToSend = if (isScoreFacingUp) {
+                    val scoreToSend = if (!scoreViewModel.isHeadingToTheReferee.value) {
                         "${score.right}:${score.left}"
                     } else {
                         "${score.left}:${score.right}"
@@ -550,8 +564,6 @@ class MainActivity : AppCompatActivity() {
             direction2.setImageResource(R.drawable.direct_down)
 
             moveBtn.setIconResource(R.drawable.arrow_up)
-
-            isScoreFacingUp = false
         }
         else {
             // Swapping the score_horizontal_linear_layout with score_stand, which
@@ -566,8 +578,6 @@ class MainActivity : AppCompatActivity() {
             direction2.setImageResource(R.drawable.direct_up)
 
             moveBtn.setIconResource(R.drawable.arrow_down)
-
-            isScoreFacingUp = true
         }
     }
 
