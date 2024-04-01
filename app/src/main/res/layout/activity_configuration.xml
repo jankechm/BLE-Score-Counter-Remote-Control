@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.ConfigurationActivity" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/brightness_textview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="@string/brightness_text"
+            android:textSize="18sp"
+            android:labelFor="@id/brightness_slider" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/brightness_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:contentDescription="@string/bright_slider_desc"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="15"
+            android:value="3"
+            app:trackColorActive="@android:color/holo_orange_light"
+            app:thumbColor="@android:color/holo_orange_light"
+            app:labelBehavior="visible"
+            app:trackHeight="12dp"
+            app:labelStyle="@style/My_Tooltip"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+<!--        <Button-->
+<!--            android:id="@+id/cancel_cfg_btn"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="60dp"-->
+<!--            android:backgroundTint="@android:color/holo_red_dark"-->
+<!--            android:text="@string/cancel_btn_text"-->
+<!--            android:textSize="16sp" />-->
+
+        <Button
+            android:id="@+id/save_cfg_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:backgroundTint="@android:color/holo_green_dark"
+            android:text="@string/save_config_btn_text"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

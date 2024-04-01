@@ -24,4 +24,8 @@
     <string name="score_direction_1_content_desc">Score direction 1</string>
     <string name="score_direction_2_content_desc">Score direction 2</string>
     <string name="encryption_title">Encrypted communication</string>
+    <string name="bright_slider_desc">Brightness slider</string>
+    <string name="brightness_text">Brightness</string>
+    <string name="ok_btn_text">OK</string>
+    <string name="save_config_btn_text">Save Configuration</string>
 </resources>

@@ -23,9 +23,12 @@ class Constants {
 
         const val SET_SCORE_CMD_PREFIX = "SET_SCORE="
         const val SET_TIME_CMD_PREFIX = "SET_TIME="
+        const val SET_BRIGHTNESS_CMD_PREFIX = "SET_BRIGHT="
         const val CRLF = "\r\n"
 
         const val MIN_SCORE = 0
         const val MAX_SCORE = 99
+
+        const val PARCELABLE_BLE_DISPLAY = "ble_display"
     }
 }

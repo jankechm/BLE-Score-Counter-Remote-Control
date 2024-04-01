@@ -38,3 +38,11 @@ Characteristics:
   confirmation = green border blink.
 - Remember last BLE device between app starts. Auto connect to it. Make it configurable.
 - Auto reconnect when BLE device reachable again.
+- If the BLE display was already connected to a different phone during one run, do not accept stored
+  configuration from the new phone right after connection, but hold it's current configuration. Use
+  separate command to transfer config on connection and separate command to transfer config manually.
+    - Add a button to transfer the config to the BLE display.
+    - Add a button to transfer the config from the BLE display to the phone.
+    - Add a separate button (with some tooltip) to persist the config on the phone.
+    - Add a return to Main Activity button.
+    - Show config from the BLE display in a TextView.

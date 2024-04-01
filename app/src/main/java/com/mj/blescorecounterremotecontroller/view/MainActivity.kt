@@ -31,6 +31,7 @@ import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedRe
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
+import com.mj.blescorecounterremotecontroller.viewmodel.ConfigViewModel
 import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -218,6 +219,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mainBinding: ActivityMainBinding
 
     private val scoreViewModel: ScoreViewModel by viewModels()
+    private val configViewModel: ConfigViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -263,7 +265,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.settings_menu_item -> {
-                    // TODO
+                    val cfgActivityIntent = Intent(this,
+                        ConfigurationActivity::class.java)
+                    cfgActivityIntent.putExtra(Constants.PARCELABLE_BLE_DISPLAY, bleDisplay)
+                    startActivity(cfgActivityIntent)
+
                     true
                 }
 
@@ -684,7 +690,7 @@ class MainActivity : AppCompatActivity() {
                     it.iconTintList = ContextCompat.getColorStateList(
                         this@MainActivity, R.color.encryption_on)
                 } else {
-                    if (scoreViewModel.askToBond) {
+                    if (configViewModel.config.value.askToBond) {
                         bleDisplay!!.createBond()
                     }
                 }

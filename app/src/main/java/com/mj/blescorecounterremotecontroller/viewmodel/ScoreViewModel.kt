@@ -9,15 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ScoreViewModel : ViewModel() {
-//    private val _leftScore = MutableStateFlow(0)
-//    val leftScore: Flow<Int> = _leftScore.asStateFlow()
-//
-//    private val _rightScore = MutableStateFlow(0)
-//    val rightScore: Flow<Int> = _rightScore.asStateFlow()
-//
-//    private var prevLeftScore = _leftScore.value
-//    private var prevRightScore = _rightScore.value
-    
     private val _score = MutableStateFlow(Score(0,0))
     val score: StateFlow<Score> = _score.asStateFlow()
 
@@ -33,8 +24,6 @@ class ScoreViewModel : ViewModel() {
      * Previous BLE display orientation value
      */
     private var wasHeadingToTheReferee = _isHeadingToTheReferee.value
-
-    var askToBond: Boolean = true
 
 
     fun incrementLeftScore() {
