@@ -46,7 +46,10 @@ class BtStateChangedReceiver : BroadcastReceiver() {
                     bondState.toBondStateDescription()
             Log.i(Constants.BT_TAG, "${device?.address} bond state changed | $bondTransition")
 
-            listeners.forEach { it.get()?.onBondStateChanged?.invoke(bondState) }
+            if (bondState != BluetoothDevice.BOND_BONDING) {
+                // Invoke callback only if "bonded" or "not bonded". Miss "bonding" state.
+                listeners.forEach { it.get()?.onBondStateChanged?.invoke(bondState) }
+            }
         }
     }
 

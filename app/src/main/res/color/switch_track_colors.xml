@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- "On" state color for the track -->
+    <item android:color="#B5FF76" android:state_checked="true"/>
+    <!-- "Off" state color for the track -->
+    <item android:color="@color/material_dynamic_neutral80" android:state_checked="false"/>
+</selector>

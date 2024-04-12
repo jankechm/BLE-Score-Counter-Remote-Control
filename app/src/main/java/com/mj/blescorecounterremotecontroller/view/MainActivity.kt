@@ -122,20 +122,20 @@ class MainActivity : AppCompatActivity() {
                     mainBinding.okBtn.visibility = View.INVISIBLE
                 }
             }
-            onCharacteristicChanged = { bleDevice, characteristic, value ->
-                runOnUiThread {
-                    val valSize = value.size
-                    if (valSize > 2 && value[valSize-2].toInt() == '\r'.code &&
-                        value[valSize-1].toInt() == '\n'.code) {
-                            val decoded = value.copyOf(valSize - 2)
-                                .toString(Charsets.US_ASCII)
-
-                            Log.i(Constants.BT_TAG, "Received: $decoded")
-                            Toast.makeText(this@MainActivity, "Received: $decoded",
-                                Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
+//            onCharacteristicChanged = { bleDevice, characteristic, value ->
+//                runOnUiThread {
+//                    val valSize = value.size
+//                    if (valSize > 2 && value[valSize-2].toInt() == '\r'.code &&
+//                        value[valSize-1].toInt() == '\n'.code) {
+//                            val decoded = value.copyOf(valSize - 2)
+//                                .toString(Charsets.US_ASCII)
+//
+//                            Log.i(Constants.BT_TAG, "Received: $decoded")
+//                            Toast.makeText(this@MainActivity, "Received: $decoded",
+//                                Toast.LENGTH_SHORT).show()
+//                    }
+//                }
+//            }
         }
     }
 
@@ -261,7 +261,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.encryption_menu_item -> {
-                    onEncryptionBtnClick()
+                    handleBondState()
+                    true
                 }
 
                 R.id.settings_menu_item -> {
@@ -386,12 +387,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun onEncryptionBtnClick(): Boolean {
-        bleDisplay?.createBond()
-        return true
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_menu, menu)
         return true
@@ -415,6 +410,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         this.registerReceiver(btStateChangedReceiver, filter)
+        btStateChangedReceiver.registerListener(btBroadcastListener)
     }
 
     override fun onStop() {
@@ -690,7 +686,10 @@ class MainActivity : AppCompatActivity() {
                     it.iconTintList = ContextCompat.getColorStateList(
                         this@MainActivity, R.color.encryption_on)
                 } else {
-                    if (configViewModel.config.value.askToBond) {
+                    it.setIcon(R.drawable.no_encryption)
+                    it.iconTintList = ContextCompat.getColorStateList(
+                        this@MainActivity, R.color.black)
+                    if (configViewModel.appCfg.value.askToBond) {
                         bleDisplay!!.createBond()
                     }
                 }
