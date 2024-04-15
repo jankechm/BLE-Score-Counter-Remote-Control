@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.CompoundButton
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.mj.blescorecounterremotecontroller.ConnectionManager
@@ -14,7 +13,6 @@ import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
-import com.mj.blescorecounterremotecontroller.viewmodel.ConfigViewModel
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
@@ -25,8 +23,6 @@ class ConfigurationActivity : AppCompatActivity() {
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     private var msgBuffer: String = ""
-
-    private val configViewModel: ConfigViewModel by viewModels()
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
@@ -248,31 +244,14 @@ class ConfigurationActivity : AppCompatActivity() {
             )
         }
 
-//        // Init UI values
-//        with(configViewModel.bleDisplayCfg.value) {
-//            activityBinding.brightnessSlider.value = brightness.toFloat()
-//            activityBinding.showScoreSwitch.isChecked = useScore
-//            activityBinding.showDateSwitch.isChecked = useDate
-//            activityBinding.showTimeSwitch.isChecked = useTime
-//            if (scroll) {
-//                activityBinding.scrollRb.isChecked = true
-//            }
-//            else {
-//                activityBinding.alternateRb.isChecked = true
-//            }
-//        }
-
         activityBinding.brightnessSlider.addOnChangeListener { slider, value, fromUser ->
-            val intVal = value.toInt()
-            configViewModel.bleDisplayCfg.value.brightness = intVal
-
             // Send command through BLE only when the change was initiated by the user.
             // Do not send it if it was changed programmatically.
             if (fromUser) {
                 if (bleDisplay != null && writableDisplayChar != null) {
                     ConnectionManager.writeCharacteristic(
                         bleDisplay!!, writableDisplayChar!!,
-                        (Constants.SET_BRIGHTNESS_CMD_PREFIX + intVal + Constants.CRLF).
+                        (Constants.SET_BRIGHTNESS_CMD_PREFIX + value.toInt() + Constants.CRLF).
                         toByteArray(Charsets.US_ASCII)
                     )
                 }
@@ -301,9 +280,8 @@ class ConfigurationActivity : AppCompatActivity() {
         ConnectionManager.unregisterListener(connectionEventListener)
     }
 
-    private val onShowScoreCheckedChangeListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-        configViewModel.bleDisplayCfg.value.useScore = isChecked
-
+    private val onShowScoreCheckedChangeListener =
+            CompoundButton.OnCheckedChangeListener { _, isChecked ->
         if (bleDisplay != null && writableDisplayChar != null) {
             val showScoreVal = if (isChecked) 1 else 0
             ConnectionManager.writeCharacteristic(bleDisplay!!, writableDisplayChar!!,
@@ -315,9 +293,7 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     private val onShowDateCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, isChecked ->
-            configViewModel.bleDisplayCfg.value.useDate = isChecked
-
+            CompoundButton.OnCheckedChangeListener { _, isChecked ->
         if (bleDisplay != null && writableDisplayChar != null) {
             val showDateVal = if (isChecked) 1 else 0
             ConnectionManager.writeCharacteristic(
@@ -329,9 +305,7 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     private val onShowTimeCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, isChecked ->
-            configViewModel.bleDisplayCfg.value.useTime = isChecked
-
+            CompoundButton.OnCheckedChangeListener { _, isChecked ->
         if (bleDisplay != null && writableDisplayChar != null) {
             val showTimeVal = if (isChecked) 1 else 0
             ConnectionManager.writeCharacteristic(
@@ -352,8 +326,6 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     private val onScrollClickedListener = View.OnClickListener {
-        configViewModel.bleDisplayCfg.value.scroll = true
-
         if (bleDisplay != null && writableDisplayChar != null) {
             ConnectionManager.writeCharacteristic(
                 bleDisplay!!, writableDisplayChar!!,
