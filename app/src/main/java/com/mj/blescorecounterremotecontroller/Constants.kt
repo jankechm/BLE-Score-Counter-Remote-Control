@@ -28,7 +28,7 @@ class Constants {
         const val SET_SHOW_DATE_CMD_PREFIX = "SET_SHOW_DATE="
         const val SET_SHOW_TIME_CMD_PREFIX = "SET_SHOW_TIME="
         const val SET_SCROLL_CMD_PREFIX = "SET_SCROLL="
-        const val SAVE_CONFIG_CMD_PREFIX = "SAVE_CONFIG="
+        const val PERSIST_CONFIG_CMD_PREFIX = "PERSIST_CONFIG="
         const val GET_CONFIG_CMD = "GET_CONFIG"
         const val CONFIG_CMD_PREFIX = "CONFIG="
         const val CONFIG_BRIGHTNESS_CMD_PREFIX = "CFG_BRIGHT="

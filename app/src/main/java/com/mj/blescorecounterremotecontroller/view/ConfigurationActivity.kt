@@ -14,6 +14,7 @@ import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationB
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class ConfigurationActivity : AppCompatActivity() {
@@ -252,7 +253,7 @@ class ConfigurationActivity : AppCompatActivity() {
                     ConnectionManager.writeCharacteristic(
                         bleDisplay!!, writableDisplayChar!!,
                         (Constants.SET_BRIGHTNESS_CMD_PREFIX + value.toInt() + Constants.CRLF).
-                        toByteArray(Charsets.US_ASCII)
+                            toByteArray(Charsets.US_ASCII)
                     )
                 }
             }
@@ -265,7 +266,22 @@ class ConfigurationActivity : AppCompatActivity() {
         activityBinding.scrollRb.setOnClickListener(onScrollClickedListener)
 
         activityBinding.persistCfgBtn.setOnClickListener {
-            // TODO Persist config in non-volatile memory of the BLE display (flash memory)
+            val config = BleDisplayCfg()
+            config.brightness = activityBinding.brightnessSlider.value.toInt()
+            config.useScore = activityBinding.showScoreSwitch.isChecked
+            config.useDate = activityBinding.showDateSwitch.isChecked
+            config.useTime = activityBinding.showTimeSwitch.isChecked
+            config.scroll = activityBinding.scrollRb.isChecked
+
+            val json = Json { encodeDefaults = true }
+            if (bleDisplay != null && writableDisplayChar != null) {
+                ConnectionManager.writeCharacteristic(
+                    bleDisplay!!, writableDisplayChar!!,
+                    (Constants.PERSIST_CONFIG_CMD_PREFIX + json.encodeToString(config) +
+                            Constants.CRLF).toByteArray(Charsets.US_ASCII)
+                )
+            }
+
             this.finish()
         }
 
@@ -299,7 +315,7 @@ class ConfigurationActivity : AppCompatActivity() {
             ConnectionManager.writeCharacteristic(
                 bleDisplay!!, writableDisplayChar!!,
                 (Constants.SET_SHOW_DATE_CMD_PREFIX + showDateVal + Constants.CRLF).
-                toByteArray(Charsets.US_ASCII)
+                    toByteArray(Charsets.US_ASCII)
             )
         }
     }
@@ -311,7 +327,7 @@ class ConfigurationActivity : AppCompatActivity() {
             ConnectionManager.writeCharacteristic(
                 bleDisplay!!, writableDisplayChar!!,
                 (Constants.SET_SHOW_TIME_CMD_PREFIX + showTimeVal + Constants.CRLF).
-                toByteArray(Charsets.US_ASCII)
+                    toByteArray(Charsets.US_ASCII)
             )
         }
     }

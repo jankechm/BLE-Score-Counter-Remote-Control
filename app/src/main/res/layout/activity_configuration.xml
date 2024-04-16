@@ -123,15 +123,19 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        style="?android:attr/buttonBarStyle"
+        >
 
         <Button
             android:id="@+id/return_from_cfg_btn"
             android:layout_width="wrap_content"
             android:layout_height="60dp"
-            android:backgroundTint="@android:color/holo_red_dark"
+            android:backgroundTint="@android:color/holo_blue_dark"
             android:text="@string/return_btn_text"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/persist_cfg_btn"
@@ -142,7 +146,9 @@
             android:tooltipText="Persist configuration to BLE display's memory
                 and return back to the main screen"
             android:text="@string/persist_config_btn_text"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            style="?android:attr/buttonBarButtonStyle"/>
 
     </LinearLayout>
 
