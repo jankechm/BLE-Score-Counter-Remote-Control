@@ -224,6 +224,7 @@ class BluetoothFragment : DialogFragment() {
         disconnectBtn.setOnClickListener {
             this.isScanning = false
             bleScanner.stopBleScan(context)
+            (activity as MainActivity?)?.manuallyDisconnected = true
             ConnectionManager.disconnectAllDevices()
         }
 

@@ -124,7 +124,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        style="?android:attr/buttonBarStyle"
         >
 
         <Button
@@ -135,7 +134,7 @@
             android:text="@string/return_btn_text"
             android:textSize="16sp"
             android:textColor="@color/white"
-            style="?android:attr/buttonBarButtonStyle" />
+            tools:ignore="ButtonStyle" />
 
         <Button
             android:id="@+id/persist_cfg_btn"
@@ -148,7 +147,8 @@
             android:text="@string/persist_config_btn_text"
             android:textSize="16sp"
             android:textColor="@color/white"
-            style="?android:attr/buttonBarButtonStyle"/>
+            tools:ignore="ButtonStyle"
+            />
 
     </LinearLayout>
 

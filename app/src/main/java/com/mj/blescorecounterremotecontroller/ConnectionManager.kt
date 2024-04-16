@@ -11,6 +11,11 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -24,6 +29,7 @@ object ConnectionManager {
     private val deviceConnectAttemptsMap = ConcurrentHashMap<BluetoothDevice, Int>()
     private val operationQueue = ConcurrentLinkedQueue<BleOperationType>()
     private var pendingOperation: BleOperationType? = null
+    private var isReconnecting = false
 
 
     fun findCharacteristic(
@@ -165,6 +171,31 @@ object ConnectionManager {
         } else if (!characteristic.isIndicatable() && !characteristic.isNotifiable()) {
             Log.e(Constants.BT_TAG,"Characteristic ${characteristic.uuid} " +
                     "doesn't support notifications/indications!")
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun startReconnectionCoroutine(bleDevice: BluetoothDevice, context: Context) {
+        isReconnecting = true
+        val maxRetries = 3
+        val connectionDelayMillis = 2_000L
+        val retryDelayMillis = 24_000L
+        var connectionAttempts = 0
+
+        GlobalScope.launch(Dispatchers.IO) {
+            while (isReconnecting && deviceGattMap.isEmpty()) {
+                connect(bleDevice, context)
+                connectionAttempts++
+                delay(connectionDelayMillis)
+
+                if (connectionAttempts % maxRetries == 0) {
+                    delay(retryDelayMillis)
+                }
+            }
+
+            if (bleDevice.isConnected()) {
+                Log.i(Constants.BT_TAG, "Reconnected to ${bleDevice.address}")
+            }
         }
     }
 
@@ -360,10 +391,9 @@ object ConnectionManager {
                         deviceGattMap[device] = gatt
                         deviceConnectAttemptsMap.remove(device)
                         listeners.forEach { it.get()?.onConnect?.invoke(device) }
-                        // TODO test calling it not in UI thread few times.
-//                        Handler(Looper.getMainLooper()).post {
+                        // Stop reconnecting coroutine if running
+                        isReconnecting = false
                         gatt.discoverServices()
-//                        }
                     } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                         Log.i(Constants.BT_TAG, "onConnectionStateChange: disconnected " +
                                 "from $deviceAddress")

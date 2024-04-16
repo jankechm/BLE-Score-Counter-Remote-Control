@@ -83,6 +83,8 @@ class MainActivity : AppCompatActivity() {
 
                     Toast.makeText(this@MainActivity,
                         "Connected to ${btDevice.address}", Toast.LENGTH_SHORT).show()
+
+                    manuallyDisconnected = false
                 }
             }
             onCCCDWrite = { btDevice, descriptor ->
@@ -93,15 +95,23 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            onDisconnect = {
+            onDisconnect = { bleDevice ->
                 runOnUiThread {
                     val btMenuItem = mainBinding.topAppBar.menu.
                         findItem(R.id.bluetooth_menu_item)
                     btMenuItem?.let {
-                        it.iconTintList = ContextCompat.getColorStateList(
-                            this@MainActivity, R.color.bt_disconnected
-                        )
-                        it.setIcon(R.drawable.bluetooth_disabled)
+                        if (manuallyDisconnected) {
+                            it.iconTintList = ContextCompat.getColorStateList(
+                                this@MainActivity, R.color.bt_disconnected
+                            )
+                            it.setIcon(R.drawable.bluetooth_disabled)
+                        }
+                        else {
+                            it.iconTintList = ContextCompat.getColorStateList(
+                                this@MainActivity, R.color.black
+                            )
+                            it.setIcon(R.drawable.bluetooth)
+                        }
                     }
 
                     val encryptionMenuItem = mainBinding.topAppBar.menu.
@@ -113,8 +123,13 @@ class MainActivity : AppCompatActivity() {
                     bleDisplay = null
                     writableDisplayChar = null
 
-                    Toast.makeText(this@MainActivity, "Disconnected from ${it.address}",
-                        Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity,
+                        "Disconnected from ${bleDevice.address}", Toast.LENGTH_SHORT).show()
+
+                    if (!manuallyDisconnected) {
+                        ConnectionManager.startReconnectionCoroutine(
+                            bleDevice, this@MainActivity)
+                    }
                 }
             }
             onCharacteristicWrite = { bleDevice, characteristic ->
@@ -220,6 +235,8 @@ class MainActivity : AppCompatActivity() {
 
     private val scoreViewModel: ScoreViewModel by viewModels()
     private val configViewModel: ConfigViewModel by viewModels()
+
+    var manuallyDisconnected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

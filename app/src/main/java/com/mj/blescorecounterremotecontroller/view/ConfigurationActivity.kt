@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.View
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.Snackbar
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
@@ -29,27 +28,15 @@ class ConfigurationActivity : AppCompatActivity() {
         ConnectionEventListener().apply {
             onCharacteristicChanged = { bleDevice, characteristic, value ->
                 runOnUiThread {
-//                    val valSize = value.size
-//                    if (valSize > 2 && value[valSize-2].toInt() == '\r'.code &&
-//                        value[valSize-1].toInt() == '\n'.code) {
-//                        val decoded = value.copyOf(valSize - 2)
-//                            .toString(Charsets.US_ASCII)
-
                     val decoded = value.toString(Charsets.US_ASCII)
-
-//                    Log.d(Constants.BT_TAG, "Received: $decoded")
-//                    Toast.makeText(this@ConfigurationActivity, "Received: $decoded",
-//                        Toast.LENGTH_SHORT).show()
-
                     msgBuffer += decoded
+
                     val msgBufferLen = msgBuffer.length
                     if (msgBufferLen >= 2 && msgBuffer[msgBufferLen-2] == '\r' &&
                         msgBuffer[msgBufferLen-1] == '\n') {
                         // Full message received, process it
                         val msg = msgBuffer.removeSuffix(Constants.CRLF)
                         Log.d(Constants.BT_TAG, "Full message: $msg")
-                        Snackbar.make(activityBinding.cfgActivityMainCl,
-                            "Full msg: $msg", Snackbar.LENGTH_SHORT).show()
 
                         if (msg.startsWith(Constants.CONFIG_CMD_PREFIX)) {
                             val jsonStr = msg.removePrefix(Constants.CONFIG_CMD_PREFIX)
@@ -108,114 +95,6 @@ class ConfigurationActivity : AppCompatActivity() {
                         // Reset the buffer
                         msgBuffer = ""
                     }
-
-
-//                        when {
-//                            decoded.startsWith(Constants.CONFIG_BRIGHTNESS_CMD_PREFIX) -> {
-//                                val brightLvlStr = decoded.removePrefix(
-//                                    Constants.CONFIG_BRIGHTNESS_CMD_PREFIX)
-//                                try {
-//                                    val brightLvlInt = brightLvlStr.toInt()
-//                                    configViewModel.bleDisplayCfg.value.brightness = brightLvlInt
-//                                    activityBinding.brightnessSlider.value = brightLvlInt.toFloat()
-//                                }
-//                                catch (ex: NumberFormatException) {
-//                                    Log.e(Constants.BT_TAG, "Unable to parse float value for " +
-//                                            "brightness level ", ex)
-//                                }
-//                            }
-//
-//                            decoded.startsWith(Constants.CONFIG_SHOW_SCORE_CMD_PREFIX) -> {
-//                                val showScoreStr = decoded.removePrefix(
-//                                    Constants.CONFIG_SHOW_SCORE_CMD_PREFIX)
-//
-//                                // Prevent calling the listener and sending a command
-//                                // to the BLE display
-//                                activityBinding.showScoreSwitch.setOnCheckedChangeListener(null)
-//
-//                                if (showScoreStr.contentEquals("1")) {
-//                                    configViewModel.bleDisplayCfg.value.useScore = true
-//                                    activityBinding.showScoreSwitch.isChecked = true
-//                                }
-//                                else if (showScoreStr.contentEquals("0")) {
-//                                    configViewModel.bleDisplayCfg.value.useScore = false
-//                                    activityBinding.showScoreSwitch.isChecked = false
-//                                }
-//                                activityBinding.showScoreSwitch.setOnCheckedChangeListener(
-//                                    onShowScoreCheckedChangeListener)
-//                            }
-//
-//                            decoded.startsWith(Constants.CONFIG_SHOW_DATE_CMD_PREFIX) -> {
-//                                val showDateStr = decoded.removePrefix(
-//                                    Constants.CONFIG_SHOW_DATE_CMD_PREFIX)
-//
-//                                // Prevent calling the listener and sending a command
-//                                // to the BLE display
-//                                activityBinding.showDateSwitch.setOnCheckedChangeListener(null)
-//
-//                                if (showDateStr.contentEquals("1")) {
-//                                    configViewModel.bleDisplayCfg.value.useDate = true
-//                                    activityBinding.showDateSwitch.isChecked = true
-//                                }
-//                                else if (showDateStr.contentEquals("0")) {
-//                                    configViewModel.bleDisplayCfg.value.useDate = false
-//                                    activityBinding.showDateSwitch.isChecked = false
-//                                }
-//
-//                                activityBinding.showDateSwitch.setOnCheckedChangeListener(
-//                                    onShowDateCheckedChangeListener)
-//                            }
-//
-//                            decoded.startsWith(Constants.CONFIG_SHOW_TIME_CMD_PREFIX) -> {
-//                                val showTimeStr = decoded.removePrefix(
-//                                    Constants.CONFIG_SHOW_TIME_CMD_PREFIX)
-//
-//                                // Prevent calling the listener and sending a command
-//                                // to the BLE display
-//                                activityBinding.showTimeSwitch.setOnCheckedChangeListener(null)
-//
-//                                if (showTimeStr.contentEquals("1")) {
-//                                    configViewModel.bleDisplayCfg.value.useTime = true
-//                                    activityBinding.showTimeSwitch.isChecked = true
-//                                }
-//                                else if (showTimeStr.contentEquals("0")) {
-//                                    configViewModel.bleDisplayCfg.value.useTime = false
-//                                    activityBinding.showTimeSwitch.isChecked = false
-//                                }
-//
-//                                activityBinding.showTimeSwitch.setOnCheckedChangeListener(
-//                                    onShowTimeCheckedChangeListener)
-//                            }
-//
-//                            decoded.startsWith(Constants.CONFIG_SCROLL_CMD_PREFIX) -> {
-//                                val scrollStr = decoded.removePrefix(
-//                                    Constants.CONFIG_SCROLL_CMD_PREFIX)
-//
-//                                if (scrollStr.contentEquals("1")) {
-//                                    // Prevent calling the listener and sending a command
-//                                    // to the BLE display
-//                                    activityBinding.scrollRb.setOnClickListener(null)
-//
-//                                    configViewModel.bleDisplayCfg.value.scroll = true
-//                                    activityBinding.scrollRb.isChecked = true
-//
-//                                    activityBinding.scrollRb.setOnClickListener(
-//                                        onScrollClickedListener)
-//                                }
-//                                else if (scrollStr.contentEquals("0")) {
-//                                    // Prevent calling the listener and sending a command
-//                                    // to the BLE display
-//                                    activityBinding.alternateRb.setOnClickListener(null)
-//
-//                                    configViewModel.bleDisplayCfg.value.scroll = false
-//                                    activityBinding.alternateRb.isChecked = true
-//
-//                                    activityBinding.alternateRb.setOnClickListener(
-//                                        onAlternateClickedListener)
-//                                }
-//                            }
-//                        }
-//                    }
                 }
             }
         }

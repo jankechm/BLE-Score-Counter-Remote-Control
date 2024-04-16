@@ -28,21 +28,9 @@ Characteristics:
 - If there was no change in the score, but still SET_SCORE command was delivered, blink just with
   the colon.
 
-- Error status 133: when you see this status (or error 128), always try adding 60~100ms delay
-  after the last successful operation.
-- Remember device when connected. If out of range and in range again, reconnect automatically.
 - Disconnect specific device instead of all.
     - Intermediary class between ConnectionManager and BluetoothFragment, that would know which
       device to disconnect from if needed?
 - Indicate changes in score: change = blue border; cancel = red border blink;
   confirmation = green border blink.
 - Remember last BLE device between app starts. Auto connect to it. Make it configurable.
-- Auto reconnect when BLE device reachable again.
-- If the BLE display was already connected to a different phone during one run, do not accept stored
-  configuration from the new phone right after connection, but hold it's current configuration. Use
-  separate command to transfer config on connection and separate command to transfer config manually.
-    - Add a button to transfer the config to the BLE display.
-    - Add a button to transfer the config from the BLE display to the phone.
-    - Add a separate button (with some tooltip) to persist the config on the phone.
-    - Add a return to Main Activity button.
-    - Show config from the BLE display in a TextView.
