@@ -561,7 +561,7 @@ class MainActivity : AppCompatActivity() {
 //    }
 
     private fun changeScoreOrientation(scoreShouldHeadToTheReferee: Boolean) {
-        val moveBtn = mainBinding.moveBtn
+//        val moveBtn = mainBinding.moveBtn
         val scoreVerticalLL = mainBinding.scoreVerticalLinearLayout
         val scoreHorizontalLL = mainBinding.scoreHorizontalLinearLayout
         val scoreStand = mainBinding.scoreStand
@@ -580,7 +580,7 @@ class MainActivity : AppCompatActivity() {
             direction1.setImageResource(R.drawable.direct_down)
             direction2.setImageResource(R.drawable.direct_down)
 
-            moveBtn.setIconResource(R.drawable.arrow_up)
+//            moveBtn.setIconResource(R.drawable.arrow_up)
         }
         else {
             // Swapping the score_horizontal_linear_layout with score_stand, which
@@ -594,7 +594,7 @@ class MainActivity : AppCompatActivity() {
             direction1.setImageResource(R.drawable.direct_up)
             direction2.setImageResource(R.drawable.direct_up)
 
-            moveBtn.setIconResource(R.drawable.arrow_down)
+//            moveBtn.setIconResource(R.drawable.arrow_down)
         }
     }
 
