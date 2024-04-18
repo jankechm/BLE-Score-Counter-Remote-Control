@@ -183,18 +183,19 @@ object ConnectionManager {
         var connectionAttempts = 0
 
         GlobalScope.launch(Dispatchers.IO) {
-            while (isReconnecting && deviceGattMap.isEmpty()) {
+            while (isReconnecting) {
                 connect(bleDevice, context)
                 connectionAttempts++
                 delay(connectionDelayMillis)
 
+                if (bleDevice.isConnected()) {
+                    Log.i(Constants.BT_TAG, "Reconnected to ${bleDevice.address}")
+                    break
+                }
+
                 if (connectionAttempts % maxRetries == 0) {
                     delay(retryDelayMillis)
                 }
-            }
-
-            if (bleDevice.isConnected()) {
-                Log.i(Constants.BT_TAG, "Reconnected to ${bleDevice.address}")
             }
         }
     }
@@ -422,6 +423,9 @@ object ConnectionManager {
                                     "for $deviceAddress, giving up :(")
                             deviceConnectAttemptsMap.remove(device)
                         }
+                    }
+                    else {
+                        teardownConnection(device)
                     }
                     signalEndOfOperation()
                 }
@@ -674,5 +678,5 @@ object ConnectionManager {
 //        }
     }
 
-    private fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)
+    fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)
 }

@@ -97,6 +97,10 @@ class ConfigurationActivity : AppCompatActivity() {
                     }
                 }
             }
+            onDisconnect = { bleDevice ->
+                ConnectionManager.startReconnectionCoroutine(
+                    bleDevice, this@ConfigurationActivity)
+            }
         }
     }
 

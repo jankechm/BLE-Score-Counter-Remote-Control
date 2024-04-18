@@ -24,7 +24,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
@@ -33,6 +35,8 @@ import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.viewmodel.ConfigViewModel
 import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -42,6 +46,10 @@ class MainActivity : AppCompatActivity() {
     private val btAdapter: BluetoothAdapter? by lazy {
         val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
         bluetoothManager.adapter
+    }
+
+    private val app: BleScoreCounterApp by lazy {
+        application as BleScoreCounterApp
     }
 
     private val connectionEventListener by lazy {
@@ -80,6 +88,8 @@ class MainActivity : AppCompatActivity() {
                                 Constants.CRLF).
                             toByteArray(Charsets.US_ASCII)
                     )
+
+                    app.saveLastDeviceAddress(btDevice.address)
 
                     Toast.makeText(this@MainActivity,
                         "Connected to ${btDevice.address}", Toast.LENGTH_SHORT).show()
@@ -137,20 +147,6 @@ class MainActivity : AppCompatActivity() {
                     mainBinding.okBtn.visibility = View.INVISIBLE
                 }
             }
-//            onCharacteristicChanged = { bleDevice, characteristic, value ->
-//                runOnUiThread {
-//                    val valSize = value.size
-//                    if (valSize > 2 && value[valSize-2].toInt() == '\r'.code &&
-//                        value[valSize-1].toInt() == '\n'.code) {
-//                            val decoded = value.copyOf(valSize - 2)
-//                                .toString(Charsets.US_ASCII)
-//
-//                            Log.i(Constants.BT_TAG, "Received: $decoded")
-//                            Toast.makeText(this@MainActivity, "Received: $decoded",
-//                                Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//            }
         }
     }
 
@@ -402,6 +398,8 @@ class MainActivity : AppCompatActivity() {
             makeSpecialButtonsVisible()
             true
         }
+
+        startConnectionToLastDeviceCoroutine()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -709,6 +707,45 @@ class MainActivity : AppCompatActivity() {
                     if (configViewModel.appCfg.value.askToBond) {
                         bleDisplay!!.createBond()
                     }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startConnectionToLastDeviceCoroutine() {
+        val lastDeviceAddress = app.getLastDeviceAddress()
+
+        val maxRetries = 3
+        val connectionDelayMillis = 2_000L
+        val retryDelayMillis = 24_000L
+        var connectionAttempts = 0
+
+        if (btAdapter != null && lastDeviceAddress != null) {
+            val lastDevice = btAdapter!!.getRemoteDevice(lastDeviceAddress)
+
+            if (lastDevice != null) {
+                if (lastDevice.bondState == BluetoothDevice.BOND_BONDED) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        while (bleDisplay == null) {
+                            ConnectionManager.connect(lastDevice, this@MainActivity)
+                            connectionAttempts++
+                            delay(connectionDelayMillis)
+
+                            if (lastDevice.isConnected()) {
+                                Log.i(Constants.BT_TAG, "Auto-connection to " +
+                                        "${lastDevice.address} successful!")
+                                break
+                            }
+
+                            if (connectionAttempts % maxRetries == 0) {
+                                delay(retryDelayMillis)
+                            }
+                        }
+                    }
+                } else {
+                    Log.i(Constants.BT_TAG, "Last BLE device was not bonded, " +
+                            "auto-connection canceled!")
                 }
             }
         }
