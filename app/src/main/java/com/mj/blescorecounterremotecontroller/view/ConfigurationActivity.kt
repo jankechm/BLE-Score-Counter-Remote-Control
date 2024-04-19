@@ -1,15 +1,20 @@
 package com.mj.blescorecounterremotecontroller.view
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
+import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
+import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
+import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
 import kotlinx.serialization.SerializationException
@@ -24,8 +29,19 @@ class ConfigurationActivity : AppCompatActivity() {
 
     private var msgBuffer: String = ""
 
+    private val btStateChangedReceiver = BtStateChangedReceiver()
+
+
+    private val app: BleScoreCounterApp by lazy {
+        application as BleScoreCounterApp
+    }
+
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
+            onMtuChanged = { bleDevice, _ ->
+                bleDisplay = bleDevice
+                app.shouldTryConnect = false
+            }
             onCharacteristicChanged = { bleDevice, characteristic, value ->
                 runOnUiThread {
                     val decoded = value.toString(Charsets.US_ASCII)
@@ -98,8 +114,24 @@ class ConfigurationActivity : AppCompatActivity() {
                 }
             }
             onDisconnect = { bleDevice ->
-                ConnectionManager.startReconnectionCoroutine(
-                    bleDevice, this@ConfigurationActivity)
+                app.startReconnectionCoroutine(bleDevice)
+            }
+        }
+    }
+
+    private val btBroadcastListener by lazy {
+        BtBroadcastListener().apply {
+            onBluetoothOff = {
+                runOnUiThread {
+                    ConnectionManager.disconnectAllDevices()
+                }
+            }
+            onBluetoothOn = {
+                if (bleDisplay != null) {
+                    app.startReconnectionCoroutine(bleDisplay!!)
+                } else {
+                    app.startConnectionToLastDeviceCoroutine()
+                }
             }
         }
     }
@@ -111,8 +143,6 @@ class ConfigurationActivity : AppCompatActivity() {
 
         val view = activityBinding.root
         setContentView(view)
-
-        ConnectionManager.registerListener(connectionEventListener)
 
         bleDisplay = intent.getParcelableExtra(Constants.PARCELABLE_BLE_DISPLAY)
         if (bleDisplay != null) {
@@ -171,6 +201,26 @@ class ConfigurationActivity : AppCompatActivity() {
         activityBinding.returnFromCfgBtn.setOnClickListener {
             this.finish()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        val filter = IntentFilter().apply {
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        }
+
+        ConnectionManager.registerListener(connectionEventListener)
+
+        this.registerReceiver(btStateChangedReceiver, filter)
+        btStateChangedReceiver.registerListener(btBroadcastListener)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        btStateChangedReceiver.unregisterListener(btBroadcastListener)
+        this.unregisterReceiver(btStateChangedReceiver)
     }
 
     override fun onDestroy() {

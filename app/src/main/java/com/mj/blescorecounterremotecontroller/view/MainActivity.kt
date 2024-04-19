@@ -26,7 +26,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
-import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
@@ -35,8 +34,6 @@ import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.viewmodel.ConfigViewModel
 import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -95,6 +92,7 @@ class MainActivity : AppCompatActivity() {
                         "Connected to ${btDevice.address}", Toast.LENGTH_SHORT).show()
 
                     manuallyDisconnected = false
+                    app.shouldTryConnect = false
                 }
             }
             onCCCDWrite = { btDevice, descriptor ->
@@ -137,8 +135,7 @@ class MainActivity : AppCompatActivity() {
                         "Disconnected from ${bleDevice.address}", Toast.LENGTH_SHORT).show()
 
                     if (!manuallyDisconnected) {
-                        ConnectionManager.startReconnectionCoroutine(
-                            bleDevice, this@MainActivity)
+                        app.startReconnectionCoroutine(bleDevice)
                     }
                 }
             }
@@ -155,6 +152,13 @@ class MainActivity : AppCompatActivity() {
             onBluetoothOff = {
                 runOnUiThread {
                     ConnectionManager.disconnectAllDevices()
+                }
+            }
+            onBluetoothOn = {
+                if (bleDisplay != null) {
+                    app.startReconnectionCoroutine(bleDisplay!!)
+                } else {
+                    app.startConnectionToLastDeviceCoroutine()
                 }
             }
             onBondStateChanged = { bondState ->
@@ -223,7 +227,8 @@ class MainActivity : AppCompatActivity() {
 
     private var permissionsPermanentlyDenied = false
     private var enablingNotification = false
-    private var bleDisplay: BluetoothDevice? = null
+    var bleDisplay: BluetoothDevice? = null
+        private set
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
@@ -241,12 +246,8 @@ class MainActivity : AppCompatActivity() {
         val view = mainBinding.root
 
         setContentView(view)
-//        setContentView(R.layout.activity_main)
 
         this.registerActivityForResult()
-
-        ConnectionManager.registerListener(connectionEventListener)
-        btStateChangedReceiver.registerListener(btBroadcastListener)
 
         this.setSupportActionBar(mainBinding.topAppBar)
 
@@ -399,7 +400,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        startConnectionToLastDeviceCoroutine()
+        app.startConnectionToLastDeviceCoroutine()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -423,6 +424,8 @@ class MainActivity : AppCompatActivity() {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         }
+
+        ConnectionManager.registerListener(connectionEventListener)
 
         this.registerReceiver(btStateChangedReceiver, filter)
         btStateChangedReceiver.registerListener(btBroadcastListener)
@@ -712,42 +715,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun startConnectionToLastDeviceCoroutine() {
-        val lastDeviceAddress = app.getLastDeviceAddress()
-
-        val maxRetries = 3
-        val connectionDelayMillis = 2_000L
-        val retryDelayMillis = 24_000L
-        var connectionAttempts = 0
-
-        if (btAdapter != null && lastDeviceAddress != null) {
-            val lastDevice = btAdapter!!.getRemoteDevice(lastDeviceAddress)
-
-            if (lastDevice != null) {
-                if (lastDevice.bondState == BluetoothDevice.BOND_BONDED) {
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        while (bleDisplay == null) {
-                            ConnectionManager.connect(lastDevice, this@MainActivity)
-                            connectionAttempts++
-                            delay(connectionDelayMillis)
-
-                            if (lastDevice.isConnected()) {
-                                Log.i(Constants.BT_TAG, "Auto-connection to " +
-                                        "${lastDevice.address} successful!")
-                                break
-                            }
-
-                            if (connectionAttempts % maxRetries == 0) {
-                                delay(retryDelayMillis)
-                            }
-                        }
-                    }
-                } else {
-                    Log.i(Constants.BT_TAG, "Last BLE device was not bonded, " +
-                            "auto-connection canceled!")
-                }
-            }
-        }
-    }
 }

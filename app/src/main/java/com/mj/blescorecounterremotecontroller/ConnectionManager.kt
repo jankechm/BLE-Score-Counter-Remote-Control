@@ -11,11 +11,6 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -171,32 +166,6 @@ object ConnectionManager {
         } else if (!characteristic.isIndicatable() && !characteristic.isNotifiable()) {
             Log.e(Constants.BT_TAG,"Characteristic ${characteristic.uuid} " +
                     "doesn't support notifications/indications!")
-        }
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun startReconnectionCoroutine(bleDevice: BluetoothDevice, context: Context) {
-        isReconnecting = true
-        val maxRetries = 3
-        val connectionDelayMillis = 2_000L
-        val retryDelayMillis = 24_000L
-        var connectionAttempts = 0
-
-        GlobalScope.launch(Dispatchers.IO) {
-            while (isReconnecting) {
-                connect(bleDevice, context)
-                connectionAttempts++
-                delay(connectionDelayMillis)
-
-                if (bleDevice.isConnected()) {
-                    Log.i(Constants.BT_TAG, "Reconnected to ${bleDevice.address}")
-                    break
-                }
-
-                if (connectionAttempts % maxRetries == 0) {
-                    delay(retryDelayMillis)
-                }
-            }
         }
     }
 
@@ -643,39 +612,6 @@ object ConnectionManager {
                 signalEndOfOperation()
             }
         }
-
-//        private fun onCccdWrite(
-//            gatt: BluetoothGatt,
-//            value: ByteArray,
-//            characteristic: BluetoothGattCharacteristic
-//        ) {
-//            val charUuid = characteristic.uuid
-//            val notificationsEnabled =
-//                value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) ||
-//                        value.contentEquals(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)
-//            val notificationsDisabled =
-//                value.contentEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
-//
-//            when {
-//                notificationsEnabled -> {
-//                    Log.w(Constants.BT_TAG,"Notifications or indications ENABLED on $charUuid")
-//                    listeners.forEach {
-//                        it.get()?.onNotificationsEnabled?.invoke(gatt.device, characteristic)
-//                    }
-//                }
-//                notificationsDisabled -> {
-//                    Log.w(Constants.BT_TAG,
-//                        "Notifications or indications DISABLED on $charUuid")
-//                    listeners.forEach {
-//                        it.get()?.onNotificationsDisabled?.invoke(gatt.device, characteristic)
-//                    }
-//                }
-//                else -> {
-//                    Log.e(Constants.BT_TAG,
-//                        "Unexpected value ${value.toHexString()} on CCCD of $charUuid")
-//                }
-//            }
-//        }
     }
 
     fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)

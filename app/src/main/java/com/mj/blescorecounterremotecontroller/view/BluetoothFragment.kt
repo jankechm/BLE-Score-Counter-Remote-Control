@@ -208,7 +208,7 @@ class BluetoothFragment : DialogFragment() {
             if (selectedScanResult != null) {
                 this.isScanning = false
                 bleScanner.stopBleScan(context)
-                // Allow only one connected device?
+                // TODO Allow only one connected device?
                 ConnectionManager.disconnectAllDevices()
                 try {
                     ConnectionManager.connect(this.selectedScanResult!!.device, requireContext())
@@ -224,8 +224,13 @@ class BluetoothFragment : DialogFragment() {
         disconnectBtn.setOnClickListener {
             this.isScanning = false
             bleScanner.stopBleScan(context)
-            (activity as MainActivity?)?.manuallyDisconnected = true
-            ConnectionManager.disconnectAllDevices()
+            val mainActivity = activity as MainActivity?
+            mainActivity?.let {
+                it.manuallyDisconnected = true
+                if (it.bleDisplay != null) {
+                    ConnectionManager.teardownConnection(it.bleDisplay!!)
+                }
+            }
         }
 
         return view

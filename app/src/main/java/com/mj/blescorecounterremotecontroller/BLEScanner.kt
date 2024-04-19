@@ -46,7 +46,7 @@ class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallb
     @SuppressLint("MissingPermission")
     fun stopBleScan(context: Context?) {
         if (btAdapter != null) {
-            btAdapter!!.bluetoothLeScanner.stopScan(scanCallback)
+            btAdapter!!.bluetoothLeScanner?.stopScan(scanCallback)
         }
         else {
             Log.i(Constants.BT_TAG, "stopBleScan(): BluetoothAdapter is null!")
