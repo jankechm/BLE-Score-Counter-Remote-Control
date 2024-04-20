@@ -5,4 +5,8 @@
     <color name="bt_connected">#1565C0</color>
     <color name="bt_disconnected">#C62828</color>
     <color name="encryption_on">#558B2F</color>
+    <color name="all_leds_on_0">@color/material_dynamic_neutral70</color>
+    <color name="all_leds_on_1">#FF6D00</color>
+    <color name="confirm_btn">@android:color/holo_green_dark</color>
+    <color name="disabled">@android:color/darker_gray</color>
 </resources>

@@ -33,4 +33,5 @@
     <string name="show_time_switch_text">Show Time</string>
     <string name="alternate_text_rb_text">Alternate Text</string>
     <string name="scroll_text_rb_text">Scroll Text</string>
+    <string name="all_leds_on_desc">All LEDs on</string>
 </resources>

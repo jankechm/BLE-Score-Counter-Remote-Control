@@ -238,6 +238,7 @@ class MainActivity : AppCompatActivity() {
     private val configViewModel: ConfigViewModel by viewModels()
 
     var manuallyDisconnected = false
+    private var allLedsOn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -326,6 +327,7 @@ class MainActivity : AppCompatActivity() {
             mainBinding.moveBtn.visibility = View.INVISIBLE
             mainBinding.swapBtn.visibility = View.INVISIBLE
             mainBinding.resetBtn.visibility = View.INVISIBLE
+            mainBinding.allLedsOnBtn.visibility = View.INVISIBLE
         }
 
         mainBinding.cancelBtn.setOnClickListener {
@@ -348,6 +350,11 @@ class MainActivity : AppCompatActivity() {
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
+        }
+
+        mainBinding.swapBtn.setOnLongClickListener {
+            mainBinding.allLedsOnBtn.visibility = View.VISIBLE
+            true
         }
 
         mainBinding.incrLeftScoreBtn.setOnClickListener {
@@ -398,6 +405,33 @@ class MainActivity : AppCompatActivity() {
         mainBinding.rightScore.setOnLongClickListener {
             makeSpecialButtonsVisible()
             true
+        }
+
+        mainBinding.allLedsOnBtn.setOnClickListener {
+            if (bleDisplay != null) {
+                if (writableDisplayChar != null) {
+                    var value = 1
+                    if (allLedsOn) {
+                        value = 0
+                        mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.all_leds_on_0
+                        )
+                        allLedsOn = false
+                    }
+                    else {
+                        mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.all_leds_on_1
+                        )
+                        allLedsOn = true
+                    }
+                    val updateScoreCmd = Constants.SET_ALL_LEDS_ON_CMD_PREFIX + value +
+                            Constants.CRLF
+                    ConnectionManager.writeCharacteristic(
+                        bleDisplay!!, writableDisplayChar!!,
+                        updateScoreCmd.toByteArray(Charsets.US_ASCII)
+                    )
+                }
+            }
         }
 
         app.startConnectionToLastDeviceCoroutine()

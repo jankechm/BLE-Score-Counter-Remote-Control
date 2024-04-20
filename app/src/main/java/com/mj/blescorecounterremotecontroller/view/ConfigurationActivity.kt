@@ -9,9 +9,11 @@ import android.util.Log
 import android.view.View
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
+import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
@@ -39,8 +41,11 @@ class ConfigurationActivity : AppCompatActivity() {
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
             onMtuChanged = { bleDevice, _ ->
-                bleDisplay = bleDevice
-                app.shouldTryConnect = false
+                runOnUiThread {
+                    bleDisplay = bleDevice
+                    app.shouldTryConnect = false
+                    enableCfgButtons()
+                }
             }
             onCharacteristicChanged = { bleDevice, characteristic, value ->
                 runOnUiThread {
@@ -114,7 +119,10 @@ class ConfigurationActivity : AppCompatActivity() {
                 }
             }
             onDisconnect = { bleDevice ->
-                app.startReconnectionCoroutine(bleDevice)
+                runOnUiThread {
+                    disableCfgButtons()
+                    app.startReconnectionCoroutine(bleDevice)
+                }
             }
         }
     }
@@ -127,10 +135,12 @@ class ConfigurationActivity : AppCompatActivity() {
                 }
             }
             onBluetoothOn = {
-                if (bleDisplay != null) {
-                    app.startReconnectionCoroutine(bleDisplay!!)
-                } else {
-                    app.startConnectionToLastDeviceCoroutine()
+                runOnUiThread {
+                    if (bleDisplay != null) {
+                        app.startReconnectionCoroutine(bleDisplay!!)
+                    } else {
+                        app.startConnectionToLastDeviceCoroutine()
+                    }
                 }
             }
         }
@@ -214,6 +224,10 @@ class ConfigurationActivity : AppCompatActivity() {
 
         this.registerReceiver(btStateChangedReceiver, filter)
         btStateChangedReceiver.registerListener(btBroadcastListener)
+
+        if (bleDisplay == null) {
+            disableCfgButtons()
+        }
     }
 
     override fun onStop() {
@@ -281,5 +295,33 @@ class ConfigurationActivity : AppCompatActivity() {
                 (Constants.SET_SCROLL_CMD_PREFIX + 1 + Constants.CRLF).toByteArray(Charsets.US_ASCII)
             )
         }
+    }
+
+    private fun disableCfgButtons() {
+        activityBinding.brightnessSlider.isEnabled = false
+        activityBinding.showScoreSwitch.isEnabled = false
+        activityBinding.showDateSwitch.isEnabled = false
+        activityBinding.showTimeSwitch.isEnabled = false
+        activityBinding.alternateRb.isEnabled = false
+        activityBinding.scrollRb.isEnabled = false
+        activityBinding.persistCfgBtn.isEnabled = false
+
+        activityBinding.persistCfgBtn.backgroundTintList = ContextCompat.getColorStateList(
+            this, R.color.disabled
+        )
+    }
+
+    private fun enableCfgButtons() {
+        activityBinding.brightnessSlider.isEnabled = true
+        activityBinding.showScoreSwitch.isEnabled = true
+        activityBinding.showDateSwitch.isEnabled = true
+        activityBinding.showTimeSwitch.isEnabled = true
+        activityBinding.alternateRb.isEnabled = true
+        activityBinding.scrollRb.isEnabled = true
+        activityBinding.persistCfgBtn.isEnabled = true
+
+        activityBinding.persistCfgBtn.backgroundTintList = ContextCompat.getColorStateList(
+            this, R.color.confirm_btn
+        )
     }
 }

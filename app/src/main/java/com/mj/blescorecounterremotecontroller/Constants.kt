@@ -23,6 +23,7 @@ class Constants {
 
         const val SET_SCORE_CMD_PREFIX = "SET_SCORE="
         const val SET_TIME_CMD_PREFIX = "SET_TIME="
+        const val SET_ALL_LEDS_ON_CMD_PREFIX = "SET_ALL_LEDS_ON="
         const val SET_BRIGHTNESS_CMD_PREFIX = "SET_BRIGHT="
         const val SET_SHOW_SCORE_CMD_PREFIX = "SET_SHOW_SCORE="
         const val SET_SHOW_DATE_CMD_PREFIX = "SET_SHOW_DATE="
@@ -31,11 +32,6 @@ class Constants {
         const val PERSIST_CONFIG_CMD_PREFIX = "PERSIST_CONFIG="
         const val GET_CONFIG_CMD = "GET_CONFIG"
         const val CONFIG_CMD_PREFIX = "CONFIG="
-        const val CONFIG_BRIGHTNESS_CMD_PREFIX = "CFG_BRIGHT="
-        const val CONFIG_SHOW_SCORE_CMD_PREFIX = "CFG_SHOW_SCORE="
-        const val CONFIG_SHOW_DATE_CMD_PREFIX = "CFG_SHOW_DATE="
-        const val CONFIG_SHOW_TIME_CMD_PREFIX = "CFG_SHOW_TIME="
-        const val CONFIG_SCROLL_CMD_PREFIX = "CFG_SCROLL="
         const val CRLF = "\r\n"
 
         const val MIN_SCORE = 0
