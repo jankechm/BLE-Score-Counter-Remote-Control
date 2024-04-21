@@ -28,12 +28,13 @@ import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
+import com.mj.blescorecounterremotecontroller.ScoreManager
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.viewmodel.ConfigViewModel
-import com.mj.blescorecounterremotecontroller.viewmodel.ScoreViewModel
+import com.mj.blescorecounterremotecontroller.viewmodel.DisplayViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -234,7 +235,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
 
-    private val scoreViewModel: ScoreViewModel by viewModels()
+    private val displayViewModel: DisplayViewModel by viewModels()
     private val configViewModel: ConfigViewModel by viewModels()
 
     var manuallyDisconnected = false
@@ -254,7 +255,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                scoreViewModel.score.collect {
+                ScoreManager.score.collect {
                     mainBinding.leftScore.text = it.left.toString()
                     mainBinding.rightScore.text = it.right.toString()
                 }
@@ -262,7 +263,7 @@ class MainActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                scoreViewModel.isHeadingToTheReferee.collect {
+                displayViewModel.isHeadingToTheReferee.collect {
                     changeScoreOrientation(it)
                 }
             }
@@ -300,9 +301,9 @@ class MainActivity : AppCompatActivity() {
 //                        bleDisplay!!, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
 //                }
                 if (writableDisplayChar != null) {
-                    val score = scoreViewModel.score.value
+                    val score = ScoreManager.score.value
 
-                    val scoreToSend = if (!scoreViewModel.isHeadingToTheReferee.value) {
+                    val scoreToSend = if (!displayViewModel.isHeadingToTheReferee.value) {
                         "${score.right}:${score.left}"
                     } else {
                         "${score.left}:${score.right}"
@@ -320,8 +321,8 @@ class MainActivity : AppCompatActivity() {
                 mainBinding.okBtn.visibility = View.INVISIBLE
             }
 
-            scoreViewModel.confirmOrientation()
-            scoreViewModel.confirmNewScore()
+            displayViewModel.confirmOrientation()
+            ScoreManager.confirmNewScore()
 
             mainBinding.cancelBtn.visibility = View.INVISIBLE
             mainBinding.moveBtn.visibility = View.INVISIBLE
@@ -331,22 +332,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.cancelBtn.setOnClickListener {
-            scoreViewModel.revertOrientation()
-            scoreViewModel.revertScore()
+            displayViewModel.revertOrientation()
+            ScoreManager.revertScore()
 
             mainBinding.cancelBtn.visibility = View.INVISIBLE
             mainBinding.okBtn.visibility = View.INVISIBLE
         }
 
         mainBinding.moveBtn.setOnClickListener {
-            scoreViewModel.toggleOrientation()
+            displayViewModel.toggleOrientation()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.swapBtn.setOnClickListener {
-            scoreViewModel.swapScore()
+            ScoreManager.swapScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
@@ -358,35 +359,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.incrLeftScoreBtn.setOnClickListener {
-            scoreViewModel.incrementLeftScore()
+            ScoreManager.incrementLeftScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrLeftScoreBtn.setOnClickListener {
-            scoreViewModel.decrementLeftScore()
+            ScoreManager.decrementLeftScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.incrRightScoreBtn.setOnClickListener {
-            scoreViewModel.incrementRightScore()
+            ScoreManager.incrementRightScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.decrRightScoreBtn.setOnClickListener {
-            scoreViewModel.decrementRightScore()
+            ScoreManager.decrementRightScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE
         }
 
         mainBinding.resetBtn.setOnClickListener {
-            scoreViewModel.resetScore()
+            ScoreManager.resetScore()
 
             mainBinding.cancelBtn.visibility = View.VISIBLE
             mainBinding.okBtn.visibility = View.VISIBLE

@@ -1,14 +1,12 @@
-package com.mj.blescorecounterremotecontroller.viewmodel
+package com.mj.blescorecounterremotecontroller
 
-import androidx.lifecycle.ViewModel
-import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.model.Score
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class ScoreViewModel : ViewModel() {
+object ScoreManager {
     private val _score = MutableStateFlow(Score(0,0))
     val score: StateFlow<Score> = _score.asStateFlow()
 
@@ -16,14 +14,6 @@ class ScoreViewModel : ViewModel() {
      * Previous Score value
      */
     private var prevScore = _score.value.copy()
-
-    private val _isHeadingToTheReferee = MutableStateFlow(false)
-    val isHeadingToTheReferee: StateFlow<Boolean> = _isHeadingToTheReferee.asStateFlow()
-
-    /**
-     * Previous BLE display orientation value
-     */
-    private var wasHeadingToTheReferee = _isHeadingToTheReferee.value
 
 
     fun incrementLeftScore() {
@@ -91,18 +81,5 @@ class ScoreViewModel : ViewModel() {
         _score.update {
             prevScore.copy()
         }
-    }
-
-    fun toggleOrientation() {
-        _isHeadingToTheReferee.value = !_isHeadingToTheReferee.value
-        swapScore()
-    }
-
-    fun confirmOrientation() {
-        wasHeadingToTheReferee = _isHeadingToTheReferee.value
-    }
-
-    fun revertOrientation() {
-        _isHeadingToTheReferee.value = wasHeadingToTheReferee
     }
 }

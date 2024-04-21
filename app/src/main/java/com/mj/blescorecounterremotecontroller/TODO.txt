@@ -16,9 +16,6 @@ Characteristics:
 |--0000ffe2-0000-1000-8000-00805f9b34fb: WRITABLE, WRITABLE WITHOUT RESPONSE
 
 
-- Create Settings in top panel
-	- Add option to specify if the app should automatically connect to lastly connected BT device on startup.
-
 - When the watch loses connection and the phone changes the score and then the smartwatch changes
   the score while still offline, on next watch reconnect, the score from the watch should be applied
   to the BLE display, because it is the most recent change.
@@ -33,4 +30,8 @@ Characteristics:
       device to disconnect from if needed?
 - Indicate changes in score: change = blue border; cancel = red border blink;
   confirmation = green border blink.
-- Remember last BLE device between app starts. Auto connect to it. Make it configurable.
+
+- Make "Auto-connect to last device" configurable.
+- Make "Ask to bond" configurable.
+
+- One BluetoothDevice in BleScoreCounterApp.
