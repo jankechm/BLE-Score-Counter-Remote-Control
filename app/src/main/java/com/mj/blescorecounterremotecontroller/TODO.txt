@@ -1,3 +1,4 @@
+Score-counter-BLE
 Discovered 3 services for C5:3C:C9:60:11:4D.
 Service 00001800-0000-1000-8000-00805f9b34fb
 Characteristics:
@@ -34,4 +35,4 @@ Characteristics:
 - Make "Auto-connect to last device" configurable.
 - Make "Ask to bond" configurable.
 
-- One BluetoothDevice in BleScoreCounterApp.
+- Define a coroutine in BleScoreCounterApp that will check each 3 seconds if BLE display is connected.

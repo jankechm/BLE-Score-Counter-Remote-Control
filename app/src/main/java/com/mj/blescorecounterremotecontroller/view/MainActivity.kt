@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.ScoreManager
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity() {
                         it.setIcon(R.drawable.bluetooth_connected)
                     }
 
-                    bleDisplay = btDevice
+                    app.bleDisplay = btDevice
                     writableDisplayChar = ConnectionManager.findCharacteristic(
                         btDevice, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID
                     )
@@ -81,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                     Log.i(Constants.BT_TAG,
                         Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter))
                     ConnectionManager.writeCharacteristic(
-                        bleDisplay!!, writableDisplayChar!!,
+                        btDevice, writableDisplayChar!!,
                         (Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter) +
                                 Constants.CRLF).
                             toByteArray(Charsets.US_ASCII)
@@ -129,14 +130,13 @@ class MainActivity : AppCompatActivity() {
                         it.isVisible = false
                     }
 
-                    bleDisplay = null
                     writableDisplayChar = null
 
                     Toast.makeText(this@MainActivity,
                         "Disconnected from ${bleDevice.address}", Toast.LENGTH_SHORT).show()
 
                     if (!manuallyDisconnected) {
-                        app.startReconnectionCoroutine(bleDevice)
+                        app.startReconnectionCoroutine()
                     }
                 }
             }
@@ -156,8 +156,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             onBluetoothOn = {
-                if (bleDisplay != null) {
-                    app.startReconnectionCoroutine(bleDisplay!!)
+                if (app.bleDisplay != null) {
+                    app.startReconnectionCoroutine()
                 } else {
                     app.startConnectionToLastDeviceCoroutine()
                 }
@@ -228,8 +228,6 @@ class MainActivity : AppCompatActivity() {
 
     private var permissionsPermanentlyDenied = false
     private var enablingNotification = false
-    var bleDisplay: BluetoothDevice? = null
-        private set
     private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
@@ -239,7 +237,7 @@ class MainActivity : AppCompatActivity() {
     private val configViewModel: ConfigViewModel by viewModels()
 
     var manuallyDisconnected = false
-    private var allLedsOn = false
+    private var allLEDsOn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -284,7 +282,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.settings_menu_item -> {
                     val cfgActivityIntent = Intent(this,
                         ConfigurationActivity::class.java)
-                    cfgActivityIntent.putExtra(Constants.PARCELABLE_BLE_DISPLAY, bleDisplay)
                     startActivity(cfgActivityIntent)
 
                     true
@@ -295,11 +292,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.okBtn.setOnClickListener {
-            if (bleDisplay != null) {
-//                if (writableDisplayChar == null) {
-//                    writableDisplayChar = ConnectionManager.findCharacteristic(
-//                        bleDisplay!!, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID)
-//                }
+            if (app.bleDisplay != null && app.bleDisplay!!.isConnected()) {
                 if (writableDisplayChar != null) {
                     val score = ScoreManager.score.value
 
@@ -312,7 +305,7 @@ class MainActivity : AppCompatActivity() {
                     val updateScoreCmd = Constants.SET_SCORE_CMD_PREFIX + scoreToSend +
                             Constants.CRLF
                     ConnectionManager.writeCharacteristic(
-                        bleDisplay!!, writableDisplayChar!!,
+                        app.bleDisplay!!, writableDisplayChar!!,
                         updateScoreCmd.toByteArray(Charsets.US_ASCII)
                     )
                 }
@@ -409,26 +402,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.allLedsOnBtn.setOnClickListener {
-            if (bleDisplay != null) {
+            if (app.bleDisplay != null) {
                 if (writableDisplayChar != null) {
                     var value = 1
-                    if (allLedsOn) {
+                    if (allLEDsOn) {
                         value = 0
                         mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
                             this@MainActivity, R.color.all_leds_on_0
                         )
-                        allLedsOn = false
+                        allLEDsOn = false
                     }
                     else {
                         mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
                             this@MainActivity, R.color.all_leds_on_1
                         )
-                        allLedsOn = true
+                        allLEDsOn = true
                     }
                     val updateScoreCmd = Constants.SET_ALL_LEDS_ON_CMD_PREFIX + value +
                             Constants.CRLF
                     ConnectionManager.writeCharacteristic(
-                        bleDisplay!!, writableDisplayChar!!,
+                        app.bleDisplay!!, writableDisplayChar!!,
                         updateScoreCmd.toByteArray(Charsets.US_ASCII)
                     )
                 }
@@ -643,11 +636,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBtFragment() {
-        val btFragment = BluetoothFragment.newInstance(bleDisplay != null)
+        val btFragment = BluetoothFragment.newInstance(
+            app.bleDisplay != null && app.bleDisplay!!.isConnected())
         btFragment.show(supportFragmentManager, "BluetoothFragment")
     }
 
-    // TODO use when clicking on BT button
     private fun isBleSupported(): Boolean {
         return this.btAdapter != null
                 && packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
@@ -731,10 +724,10 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun handleBondState() {
-        if (bleDisplay != null) {
+        if (app.bleDisplay != null) {
             mainBinding.topAppBar.menu.findItem(R.id.encryption_menu_item)?.let {
                 it.isVisible = true
-                if (bleDisplay!!.bondState == BluetoothDevice.BOND_BONDED) {
+                if (app.bleDisplay!!.bondState == BluetoothDevice.BOND_BONDED) {
                     it.setIcon(R.drawable.encryption)
                     it.iconTintList = ContextCompat.getColorStateList(
                         this@MainActivity, R.color.encryption_on)
@@ -743,7 +736,7 @@ class MainActivity : AppCompatActivity() {
                     it.iconTintList = ContextCompat.getColorStateList(
                         this@MainActivity, R.color.black)
                     if (configViewModel.appCfg.value.askToBond) {
-                        bleDisplay!!.createBond()
+                        app.bleDisplay!!.createBond()
                     }
                 }
             }

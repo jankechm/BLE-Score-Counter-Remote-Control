@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mj.blescorecounterremotecontroller.BLEDevicesAdapter
 import com.mj.blescorecounterremotecontroller.BLEScanner
+import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
@@ -53,6 +54,10 @@ class BluetoothFragment : DialogFragment() {
             selectedScanResult = selectedResult
             connectBtn.visibility = View.VISIBLE
         }
+    }
+
+    private val app: BleScoreCounterApp by lazy {
+        activity?.application as BleScoreCounterApp
     }
 
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -227,8 +232,8 @@ class BluetoothFragment : DialogFragment() {
             val mainActivity = activity as MainActivity?
             mainActivity?.let {
                 it.manuallyDisconnected = true
-                if (it.bleDisplay != null) {
-                    ConnectionManager.teardownConnection(it.bleDisplay!!)
+                if (app.bleDisplay != null) {
+                    ConnectionManager.teardownConnection(app.bleDisplay!!)
                 }
             }
         }
@@ -245,12 +250,10 @@ class BluetoothFragment : DialogFragment() {
     private fun runScan() {
         handler.postDelayed({
             this.isScanning = false
-//            this.stopBleScan()
             bleScanner.stopBleScan(context)
         }, Constants.SCAN_PERIOD)
 
         this.isScanning = true
-//        this.startBleScan()
 
         // The order of these calls is important
         scanResults.clear()

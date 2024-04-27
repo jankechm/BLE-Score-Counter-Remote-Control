@@ -30,6 +30,8 @@ class BleScoreCounterApp : Application() {
         bluetoothManager.adapter
     }
 
+    var bleDisplay: BluetoothDevice? = null
+
     var shouldTryConnect = false
 
     private var isSomeConnectionCoroutineRunning = false
@@ -42,7 +44,7 @@ class BleScoreCounterApp : Application() {
         }
     }
 
-    fun getLastDeviceAddress(): String? {
+    private fun getLastDeviceAddress(): String? {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getString(PREF_LAST_DEVICE_ADDRESS, null)
     }
@@ -98,9 +100,13 @@ class BleScoreCounterApp : Application() {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    fun startReconnectionCoroutine(bleDevice: BluetoothDevice) {
+    fun startReconnectionCoroutine() {
         if (isSomeConnectionCoroutineRunning) {
             Log.i(Constants.BT_TAG, "Some connection coroutine already running!")
+            return
+        }
+        if (bleDisplay == null) {
+            Log.i(Constants.BT_TAG, "BluetoothDevice is null!")
             return
         }
 
@@ -112,12 +118,12 @@ class BleScoreCounterApp : Application() {
 
         GlobalScope.launch(Dispatchers.IO) {
             while (shouldTryConnect && btAdapter != null && btAdapter!!.isEnabled) {
-                ConnectionManager.connect(bleDevice, this@BleScoreCounterApp)
+                ConnectionManager.connect(bleDisplay!!, this@BleScoreCounterApp)
                 connectionAttempts++
                 delay(connectionDelayMillis)
 
-                if (bleDevice.isConnected()) {
-                    Log.i(Constants.BT_TAG, "Reconnected to ${bleDevice.address}")
+                if (bleDisplay!!.isConnected()) {
+                    Log.i(Constants.BT_TAG, "Reconnected to ${bleDisplay!!.address}")
                     break
                 }
 
