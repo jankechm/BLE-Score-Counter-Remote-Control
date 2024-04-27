@@ -11,14 +11,13 @@ import android.widget.Toast
 
 class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallback: ScanCallback) {
 
-    // TODO add filtering on name
     private val scanFilter = ScanFilter.Builder()
+        .setDeviceName(Constants.BLE_DISPLAY_NAME)
         .build()
 
     private val scanSettings = ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-        // TODO Enable after testing W/ and W/O
-//        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
+        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
         .build()
 
     /**

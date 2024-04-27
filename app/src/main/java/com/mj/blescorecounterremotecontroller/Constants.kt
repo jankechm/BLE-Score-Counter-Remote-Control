@@ -4,6 +4,8 @@ class Constants {
     companion object {
         const val BT_TAG = "Bluetooth"
 
+        const val BLE_DISPLAY_NAME = "Score-counter-BLE"
+
         const val BT_PERMISSIONS_REQUEST_CODE = 1
 
         const val ALREADY_CONNECTED_PARAM = "already_connected"
@@ -36,7 +38,5 @@ class Constants {
 
         const val MIN_SCORE = 0
         const val MAX_SCORE = 99
-
-        const val PARCELABLE_BLE_DISPLAY = "ble_display"
     }
 }

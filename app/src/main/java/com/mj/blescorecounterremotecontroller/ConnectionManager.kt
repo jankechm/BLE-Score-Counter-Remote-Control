@@ -179,7 +179,7 @@ object ConnectionManager {
 
     @Synchronized
     private fun signalEndOfOperation() {
-        Log.e(Constants.BT_TAG, "End of $pendingOperation")
+        Log.i(Constants.BT_TAG, "End of $pendingOperation")
         pendingOperation = null
         if (operationQueue.isNotEmpty()) {
             doNextOperation()
@@ -222,6 +222,7 @@ object ConnectionManager {
         when (operation) {
             is Disconnect -> with(operation) {
                 Log.i(Constants.BT_TAG, "Disconnecting from ${device.address}")
+                gatt.disconnect()
                 gatt.close()
                 deviceGattMap.remove(device)
                 listeners.forEach { it.get()?.onDisconnect?.invoke(device) }
