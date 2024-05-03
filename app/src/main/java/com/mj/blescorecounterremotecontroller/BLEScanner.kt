@@ -17,7 +17,7 @@ class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallb
 
     private val scanSettings = ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
+//        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
         .build()
 
     /**

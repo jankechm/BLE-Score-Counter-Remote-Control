@@ -35,4 +35,6 @@ Characteristics:
 - Make "Auto-connect to last device" configurable.
 - Make "Ask to bond" configurable.
 
-- Define a coroutine in BleScoreCounterApp that will check each 3 seconds if BLE display is connected.
+- Instruct users to turn off battery optimizations for this app. Check https://dontkillmyapp.com/
+
+- Set foreground service start after 5s delay to test that it truly starts from the bg.

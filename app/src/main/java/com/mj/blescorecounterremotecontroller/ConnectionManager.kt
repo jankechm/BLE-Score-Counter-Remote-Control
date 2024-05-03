@@ -1,3 +1,7 @@
+/**
+ * Based on https://github.com/PunchThrough/ble-starter-android
+ */
+
 package com.mj.blescorecounterremotecontroller
 
 import android.annotation.SuppressLint
@@ -9,8 +13,15 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -19,12 +30,16 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 object ConnectionManager {
 
+    const val TIMEOUT_CONNECT_MS = 1500L
+
     private var listeners: MutableSet<WeakReference<ConnectionEventListener>> = ConcurrentHashMap.newKeySet()
     private val deviceGattMap = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
     private val deviceConnectAttemptsMap = ConcurrentHashMap<BluetoothDevice, Int>()
     private val operationQueue = ConcurrentLinkedQueue<BleOperationType>()
-    private var pendingOperation: BleOperationType? = null
-    private var isReconnecting = false
+    var pendingOperation: BleOperationType? = null
+        private set
+
+    private val handler: Handler = Handler(Looper.getMainLooper())
 
 
     fun findCharacteristic(
@@ -171,9 +186,15 @@ object ConnectionManager {
 
     @Synchronized
     private fun enqueueOperation(operation: BleOperationType) {
-        operationQueue.add(operation)
-        if (pendingOperation == null) {
-            doNextOperation()
+        if (operationQueue.size < Constants.MAX_OPS_QUEUE_SIZE) {
+            if (!(pendingOperation is Connect && operation is Connect)) {
+                operationQueue.add(operation)
+            }
+            if (pendingOperation == null) {
+                doNextOperation()
+            }
+        } else if (pendingOperation is Connect) {
+            signalEndOfOperation()
         }
     }
 
@@ -205,6 +226,7 @@ object ConnectionManager {
         if (operation is Connect) {
             with(operation) {
                 Log.i(Constants.BT_TAG, "Connecting to ${device.address}")
+                cancelConnectAfterTimeout(operation)
                 device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
             }
             return
@@ -362,18 +384,20 @@ object ConnectionManager {
                         deviceGattMap[device] = gatt
                         deviceConnectAttemptsMap.remove(device)
                         listeners.forEach { it.get()?.onConnect?.invoke(device) }
-                        // Stop reconnecting coroutine if running
-                        isReconnecting = false
-                        gatt.discoverServices()
+                        handler.post {
+                            gatt.discoverServices()
+                        }
                     } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                         Log.i(Constants.BT_TAG, "onConnectionStateChange: disconnected " +
                                 "from $deviceAddress")
                         teardownConnection(device)
                     }
                 }
+                // Requires pairing/bonding
                 BluetoothGatt.GATT_INSUFFICIENT_ENCRYPTION,
                 BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION -> {
-                    // TODO bond device first
+                    device.createBond()
+                    signalEndOfOperation()
                 }
                 // Random, sporadic errors
                 133, 128 -> {
@@ -583,11 +607,13 @@ object ConnectionManager {
                     BluetoothGatt.GATT_SUCCESS -> {
                         Log.i(Constants.BT_TAG,"Wrote to descriptor $uuid")
 
-                        if (isCccd()) {
-//                            onCccdWrite(gatt, value, characteristic)
-                            listeners.forEach {
-                                it.get()?.onCCCDWrite?.invoke(gatt.device, this)
-                            }
+                        if (isCccd() &&
+                            (pendingOperation is EnableNotifications ||
+                                    pendingOperation is DisableNotifications)) {
+                            onCccdWrite(gatt, characteristic, pendingOperation)
+//                            listeners.forEach {
+//                                it.get()?.onCCCDWrite?.invoke(gatt.device, this)
+//                            }
                         } else {
                             listeners.forEach {
                                 it.get()?.onDescriptorWrite?.invoke(gatt.device, this)
@@ -604,16 +630,66 @@ object ConnectionManager {
                 }
             }
 
-            if (descriptor.isCccd() &&
-                (pendingOperation is EnableNotifications ||
-                        pendingOperation is DisableNotifications)
-            ) {
+            val isNotificationsOperation = descriptor.isCccd() &&
+                    (pendingOperation is EnableNotifications ||
+                            pendingOperation is DisableNotifications)
+            val isManualWriteOperation = !descriptor.isCccd() &&
+                    pendingOperation is DescriptorWrite
+            if (isNotificationsOperation || isManualWriteOperation) {
                 signalEndOfOperation()
-            } else if (!descriptor.isCccd() && pendingOperation is DescriptorWrite) {
-                signalEndOfOperation()
+            }
+        }
+
+        private fun onCccdWrite(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            operationType: BleOperationType?
+        ) {
+            val charUuid = characteristic.uuid
+
+            when (operationType) {
+                is EnableNotifications -> {
+                    Log.i(Constants.BT_TAG,"Notifications or indications ENABLED on $charUuid")
+                    listeners.forEach {
+                        it.get()?.onNotificationsEnabled?.invoke(
+                            gatt.device,
+                            characteristic
+                        )
+                    }
+                }
+                is DisableNotifications -> {
+                    Log.i(Constants.BT_TAG,"Notifications or indications DISABLED on $charUuid")
+                    listeners.forEach {
+                        it.get()?.onNotificationsDisabled?.invoke(
+                            gatt.device,
+                            characteristic
+                        )
+                    }
+                }
+                else -> {
+                    Log.e(Constants.BT_TAG,
+                        "Unexpected operation type of $operationType on CCCD of $charUuid")
+                }
             }
         }
     }
 
     fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)
+
+    /**
+     * Cancel Connect operation after a specified timeout.
+     * It runs a coroutine.
+     */
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun cancelConnectAfterTimeout(operation: BleOperationType) {
+        if (operation is Connect) {
+            GlobalScope.launch(Dispatchers.IO) {
+                delay(TIMEOUT_CONNECT_MS)
+                if (pendingOperation == operation) {
+                    signalEndOfOperation()
+                }
+            }
+        }
+    }
+
 }

@@ -214,7 +214,7 @@ class BluetoothFragment : DialogFragment() {
                 this.isScanning = false
                 bleScanner.stopBleScan(context)
                 // TODO Allow only one connected device?
-                ConnectionManager.disconnectAllDevices()
+//                ConnectionManager.disconnectAllDevices()
                 try {
                     ConnectionManager.connect(this.selectedScanResult!!.device, requireContext())
                 } catch (e: IllegalStateException) {
@@ -229,12 +229,9 @@ class BluetoothFragment : DialogFragment() {
         disconnectBtn.setOnClickListener {
             this.isScanning = false
             bleScanner.stopBleScan(context)
-            val mainActivity = activity as MainActivity?
-            mainActivity?.let {
-                it.manuallyDisconnected = true
-                if (app.bleDisplay != null) {
-                    ConnectionManager.teardownConnection(app.bleDisplay!!)
-                }
+            app.manuallyDisconnected = true
+            if (app.bleDisplay != null) {
+                ConnectionManager.teardownConnection(app.bleDisplay!!)
             }
         }
 

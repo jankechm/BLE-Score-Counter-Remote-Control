@@ -5,8 +5,8 @@ import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.toBondStateDescription
@@ -24,14 +24,12 @@ class BtStateChangedReceiver : BroadcastReceiver() {
 
             when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)) {
                 BluetoothAdapter.STATE_OFF -> {
-                    Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_SHORT).show()
                     Log.i(Constants.BT_TAG, "Bluetooth is off")
 
                     listeners.forEach { it.get()?.onBluetoothOff?.invoke() }
                 }
 
                 BluetoothAdapter.STATE_ON -> {
-                    Toast.makeText(context, "Bluetooth is on", Toast.LENGTH_SHORT).show()
                     Log.i(Constants.BT_TAG, "Bluetooth is on")
 
                     listeners.forEach { it.get()?.onBluetoothOn?.invoke() }
@@ -39,7 +37,13 @@ class BtStateChangedReceiver : BroadcastReceiver() {
             }
         }
         else if (intent?.action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
-            val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+            val device = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+            }
+            else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
+            }
             val previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1)
             val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
             val bondTransition = "${previousBondState.toBondStateDescription()} to " +
@@ -48,7 +52,7 @@ class BtStateChangedReceiver : BroadcastReceiver() {
 
             if (bondState != BluetoothDevice.BOND_BONDING) {
                 // Invoke callback only if "bonded" or "not bonded". Miss "bonding" state.
-                listeners.forEach { it.get()?.onBondStateChanged?.invoke(bondState) }
+                listeners.forEach { it.get()?.onBondStateChanged?.invoke(bondState, device) }
             }
         }
     }

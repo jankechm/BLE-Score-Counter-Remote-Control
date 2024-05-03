@@ -38,5 +38,7 @@ class Constants {
 
         const val MIN_SCORE = 0
         const val MAX_SCORE = 99
+
+        const val MAX_OPS_QUEUE_SIZE = 10
     }
 }

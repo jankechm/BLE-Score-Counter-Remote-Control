@@ -1,8 +1,5 @@
 package com.mj.blescorecounterremotecontroller.view
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGattCharacteristic
-import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,9 +11,7 @@ import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
-import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
-import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
 import kotlinx.serialization.SerializationException
@@ -26,11 +21,8 @@ import kotlinx.serialization.json.Json
 class ConfigurationActivity : AppCompatActivity() {
 
     private lateinit var  activityBinding: ActivityConfigurationBinding
-    private var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     private var msgBuffer: String = ""
-
-    private val btStateChangedReceiver = BtStateChangedReceiver()
 
 
     private val app: BleScoreCounterApp by lazy {
@@ -39,15 +31,12 @@ class ConfigurationActivity : AppCompatActivity() {
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
-            onMtuChanged = { bleDevice, _ ->
+            onMtuChanged = { _, _ ->
                 runOnUiThread {
-                    app.bleDisplay = bleDevice
-                    app.shouldTryConnect = false
-                    app.saveLastDeviceAddress(bleDevice.address)
                     enableCfgButtons()
                 }
             }
-            onCharacteristicChanged = { bleDevice, characteristic, value ->
+            onCharacteristicChanged = { _, _, value ->
                 runOnUiThread {
                     val decoded = value.toString(Charsets.US_ASCII)
                     msgBuffer += decoded
@@ -118,33 +107,14 @@ class ConfigurationActivity : AppCompatActivity() {
                     }
                 }
             }
-            onDisconnect = { bleDevice ->
+            onDisconnect = { _ ->
                 runOnUiThread {
                     disableCfgButtons()
-                    app.startReconnectionCoroutine()
                 }
             }
         }
     }
 
-    private val btBroadcastListener by lazy {
-        BtBroadcastListener().apply {
-            onBluetoothOff = {
-                runOnUiThread {
-                    ConnectionManager.disconnectAllDevices()
-                }
-            }
-            onBluetoothOn = {
-                runOnUiThread {
-                    if (app.bleDisplay != null) {
-                        app.startReconnectionCoroutine()
-                    } else {
-                        app.startConnectionToLastDeviceCoroutine()
-                    }
-                }
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,12 +125,9 @@ class ConfigurationActivity : AppCompatActivity() {
         setContentView(view)
 
         if (app.bleDisplay != null) {
-            writableDisplayChar = ConnectionManager.findCharacteristic(
-                app.bleDisplay!!, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID
-            )
-            if (writableDisplayChar != null) {
+            if (app.writableDisplayChar != null) {
                 ConnectionManager.writeCharacteristic(
-                    app.bleDisplay!!, writableDisplayChar!!,
+                    app.bleDisplay!!, app.writableDisplayChar!!,
                     (Constants.GET_CONFIG_CMD + Constants.CRLF).toByteArray(Charsets.US_ASCII)
                 )
             }
@@ -170,9 +137,9 @@ class ConfigurationActivity : AppCompatActivity() {
             // Send command through BLE only when the change was initiated by the user.
             // Do not send it if it was changed programmatically.
             if (fromUser) {
-                if (app.bleDisplay != null && writableDisplayChar != null) {
+                if (app.bleDisplay != null && app.writableDisplayChar != null) {
                     ConnectionManager.writeCharacteristic(
-                        app.bleDisplay!!, writableDisplayChar!!,
+                        app.bleDisplay!!, app.writableDisplayChar!!,
                         (Constants.SET_BRIGHTNESS_CMD_PREFIX + value.toInt() + Constants.CRLF).
                             toByteArray(Charsets.US_ASCII)
                     )
@@ -195,9 +162,9 @@ class ConfigurationActivity : AppCompatActivity() {
             config.scroll = activityBinding.scrollRb.isChecked
 
             val json = Json { encodeDefaults = true }
-            if (app.bleDisplay != null && writableDisplayChar != null) {
+            if (app.bleDisplay != null && app.writableDisplayChar != null) {
                 ConnectionManager.writeCharacteristic(
-                    app.bleDisplay!!, writableDisplayChar!!,
+                    app.bleDisplay!!, app.writableDisplayChar!!,
                     (Constants.PERSIST_CONFIG_CMD_PREFIX + json.encodeToString(config) +
                             Constants.CRLF).toByteArray(Charsets.US_ASCII)
                 )
@@ -214,25 +181,11 @@ class ConfigurationActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        val filter = IntentFilter().apply {
-            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
-        }
-
         ConnectionManager.registerListener(connectionEventListener)
-
-        this.registerReceiver(btStateChangedReceiver, filter)
-        btStateChangedReceiver.registerListener(btBroadcastListener)
 
         if (app.bleDisplay == null || !app.bleDisplay!!.isConnected()) {
             disableCfgButtons()
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        btStateChangedReceiver.unregisterListener(btBroadcastListener)
-        this.unregisterReceiver(btStateChangedReceiver)
     }
 
     override fun onDestroy() {
@@ -243,9 +196,9 @@ class ConfigurationActivity : AppCompatActivity() {
 
     private val onShowScoreCheckedChangeListener =
             CompoundButton.OnCheckedChangeListener { _, isChecked ->
-        if (app.bleDisplay != null && writableDisplayChar != null) {
+        if (app.bleDisplay != null && app.writableDisplayChar != null) {
             val showScoreVal = if (isChecked) 1 else 0
-            ConnectionManager.writeCharacteristic(app.bleDisplay!!, writableDisplayChar!!,
+            ConnectionManager.writeCharacteristic(app.bleDisplay!!, app.writableDisplayChar!!,
                 (Constants.SET_SHOW_SCORE_CMD_PREFIX + showScoreVal + Constants.CRLF).toByteArray(
                     Charsets.US_ASCII
                 )
@@ -255,10 +208,10 @@ class ConfigurationActivity : AppCompatActivity() {
 
     private val onShowDateCheckedChangeListener =
             CompoundButton.OnCheckedChangeListener { _, isChecked ->
-        if (app.bleDisplay != null && writableDisplayChar != null) {
+        if (app.bleDisplay != null && app.writableDisplayChar != null) {
             val showDateVal = if (isChecked) 1 else 0
             ConnectionManager.writeCharacteristic(
-                app.bleDisplay!!, writableDisplayChar!!,
+                app.bleDisplay!!, app.writableDisplayChar!!,
                 (Constants.SET_SHOW_DATE_CMD_PREFIX + showDateVal + Constants.CRLF).
                     toByteArray(Charsets.US_ASCII)
             )
@@ -267,10 +220,10 @@ class ConfigurationActivity : AppCompatActivity() {
 
     private val onShowTimeCheckedChangeListener =
             CompoundButton.OnCheckedChangeListener { _, isChecked ->
-        if (app.bleDisplay != null && writableDisplayChar != null) {
+        if (app.bleDisplay != null && app.writableDisplayChar != null) {
             val showTimeVal = if (isChecked) 1 else 0
             ConnectionManager.writeCharacteristic(
-                app.bleDisplay!!, writableDisplayChar!!,
+                app.bleDisplay!!, app.writableDisplayChar!!,
                 (Constants.SET_SHOW_TIME_CMD_PREFIX + showTimeVal + Constants.CRLF).
                     toByteArray(Charsets.US_ASCII)
             )
@@ -278,18 +231,18 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     private val onAlternateClickedListener = View.OnClickListener {
-        if (app.bleDisplay != null && writableDisplayChar != null) {
+        if (app.bleDisplay != null && app.writableDisplayChar != null) {
             ConnectionManager.writeCharacteristic(
-                app.bleDisplay!!, writableDisplayChar!!,
+                app.bleDisplay!!, app.writableDisplayChar!!,
                 (Constants.SET_SCROLL_CMD_PREFIX + 0 + Constants.CRLF).toByteArray(Charsets.US_ASCII)
             )
         }
     }
 
     private val onScrollClickedListener = View.OnClickListener {
-        if (app.bleDisplay != null && writableDisplayChar != null) {
+        if (app.bleDisplay != null && app.writableDisplayChar != null) {
             ConnectionManager.writeCharacteristic(
-                app.bleDisplay!!, writableDisplayChar!!,
+                app.bleDisplay!!, app.writableDisplayChar!!,
                 (Constants.SET_SCROLL_CMD_PREFIX + 1 + Constants.CRLF).toByteArray(Charsets.US_ASCII)
             )
         }
