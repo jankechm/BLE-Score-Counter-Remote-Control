@@ -15,13 +15,13 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -53,18 +53,18 @@ object ConnectionManager {
             listeners.add(WeakReference(listener))
             listeners.removeIf { it.get() == null }
 
-            Log.d(Constants.BT_TAG, "Added a listener, ${listeners.size} listeners total")
+            Timber.d("Added a listener, ${listeners.size} listeners total")
         }
     }
 
     fun unregisterListener(listener: ConnectionEventListener) {
         listeners.removeIf { it.get() == listener || it.get() == null }
-        Log.d(Constants.BT_TAG, "Removed a listener, ${listeners.size} listeners total")
+        Timber.d("Removed a listener, ${listeners.size} listeners total")
     }
 
     fun connect(device: BluetoothDevice, context: Context) {
         if (device.isConnected()) {
-            Log.w(Constants.BT_TAG,"Already connected to ${device.address}!")
+            Timber.w("Already connected to ${device.address}!")
         } else {
             enqueueOperation(Connect(device, context.applicationContext))
         }
@@ -74,7 +74,7 @@ object ConnectionManager {
         if (device.isConnected()) {
             enqueueOperation(Disconnect(device))
         } else {
-            Log.w(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.w("Not connected to ${device.address}, " +
                     "cannot teardown connection!")
         }
     }
@@ -89,7 +89,7 @@ object ConnectionManager {
             enqueueOperation(MtuRequest(device,
                 mtu.coerceIn(Constants.GATT_MIN_MTU_SIZE, Constants.GATT_MAX_MTU_SIZE)))
         } else {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot request MTU update!")
         }
     }
@@ -98,10 +98,10 @@ object ConnectionManager {
         if (device.isConnected() && characteristic.isReadable()) {
             enqueueOperation(CharacteristicRead(device, characteristic.uuid))
         } else if (!characteristic.isReadable()) {
-            Log.e(Constants.BT_TAG,"Attempting to read ${characteristic.uuid} " +
+            Timber.e("Attempting to read ${characteristic.uuid} " +
                     "that isn't readable!")
         } else if (!device.isConnected()) {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot perform characteristic read!")
         }
     }
@@ -117,7 +117,7 @@ object ConnectionManager {
                 BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
             }
             else -> {
-                Log.e(Constants.BT_TAG,"Characteristic ${characteristic.uuid} " +
+                Timber.e("Characteristic ${characteristic.uuid} " +
                         "cannot be written to!")
                 return
             }
@@ -125,7 +125,7 @@ object ConnectionManager {
         if (device.isConnected()) {
             enqueueOperation(CharacteristicWrite(device, characteristic.uuid, writeType, payload))
         } else {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot perform characteristic write!")
         }
     }
@@ -134,9 +134,9 @@ object ConnectionManager {
         if (device.isConnected() && descriptor.isReadable()) {
             enqueueOperation(DescriptorRead(device, descriptor.uuid))
         } else if (!descriptor.isReadable()) {
-            Log.e(Constants.BT_TAG,"Attempting to read ${descriptor.uuid} that isn't readable!")
+            Timber.e("Attempting to read ${descriptor.uuid} that isn't readable!")
         } else if (!device.isConnected()) {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot perform descriptor read!")
         }
     }
@@ -149,10 +149,10 @@ object ConnectionManager {
         if (device.isConnected() && (descriptor.isWritable() || descriptor.isCccd())) {
             enqueueOperation(DescriptorWrite(device, descriptor.uuid, payload))
         } else if (!device.isConnected()) {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot perform descriptor write!")
         } else if (!descriptor.isWritable() && !descriptor.isCccd()) {
-            Log.e(Constants.BT_TAG,"Descriptor ${descriptor.uuid} cannot be written to!")
+            Timber.e("Descriptor ${descriptor.uuid} cannot be written to!")
         }
     }
 
@@ -162,10 +162,10 @@ object ConnectionManager {
         ) {
             enqueueOperation(EnableNotifications(device, characteristic.uuid))
         } else if (!device.isConnected()) {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot enable notifications!")
         } else if (!characteristic.isIndicatable() && !characteristic.isNotifiable()) {
-            Log.e(Constants.BT_TAG,"Characteristic ${characteristic.uuid} " +
+            Timber.e("Characteristic ${characteristic.uuid} " +
                     "doesn't support notifications/indications!")
         }
     }
@@ -176,10 +176,10 @@ object ConnectionManager {
         ) {
             enqueueOperation(DisableNotifications(device, characteristic.uuid))
         } else if (!device.isConnected()) {
-            Log.e(Constants.BT_TAG,"Not connected to ${device.address}, " +
+            Timber.e("Not connected to ${device.address}, " +
                     "cannot disable notifications!")
         } else if (!characteristic.isIndicatable() && !characteristic.isNotifiable()) {
-            Log.e(Constants.BT_TAG,"Characteristic ${characteristic.uuid} " +
+            Timber.e("Characteristic ${characteristic.uuid} " +
                     "doesn't support notifications/indications!")
         }
     }
@@ -193,14 +193,18 @@ object ConnectionManager {
             if (pendingOperation == null) {
                 doNextOperation()
             }
-        } else if (pendingOperation is Connect) {
-            signalEndOfOperation()
+        } else {
+            Timber.i("Queue is full! Last operation not enqueued!")
+            if (pendingOperation is Connect) {
+                Timber.i("Cancelling pending Connect operation!")
+                signalEndOfOperation()
+            }
         }
     }
 
     @Synchronized
     private fun signalEndOfOperation() {
-        Log.i(Constants.BT_TAG, "End of $pendingOperation")
+        Timber.i("End of $pendingOperation")
         pendingOperation = null
         if (operationQueue.isNotEmpty()) {
             doNextOperation()
@@ -211,13 +215,13 @@ object ConnectionManager {
     @Synchronized
     private fun doNextOperation() {
         if (pendingOperation != null) {
-            Log.e(Constants.BT_TAG, "doNextOperation() called when an operation is pending! " +
+            Timber.e("doNextOperation() called when an operation is pending! " +
                     "Aborting.")
             return
         }
 
         val operation = operationQueue.poll() ?: run {
-            Log.i(Constants.BT_TAG, "Operation queue empty, returning")
+            Timber.i("Operation queue empty, returning")
             return
         }
         pendingOperation = operation
@@ -225,7 +229,7 @@ object ConnectionManager {
         // Handle Connect separately from other operations that require device to be connected
         if (operation is Connect) {
             with(operation) {
-                Log.i(Constants.BT_TAG, "Connecting to ${device.address}")
+                Timber.i("Connecting to ${device.address}")
                 cancelConnectAfterTimeout(operation)
                 device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
             }
@@ -235,7 +239,7 @@ object ConnectionManager {
         // Check BluetoothGatt availability for other operations
         val gatt = deviceGattMap[operation.device]
             ?: this@ConnectionManager.run {
-                Log.e(Constants.BT_TAG, "Not connected to ${operation.device.address}! " +
+                Timber.e("Not connected to ${operation.device.address}! " +
                         "Aborting $operation operation.")
                 signalEndOfOperation()
                 return
@@ -243,7 +247,7 @@ object ConnectionManager {
 
         when (operation) {
             is Disconnect -> with(operation) {
-                Log.i(Constants.BT_TAG, "Disconnecting from ${device.address}")
+                Timber.i("Disconnecting from ${device.address}")
                 gatt.disconnect()
                 gatt.close()
                 deviceGattMap.remove(device)
@@ -264,7 +268,7 @@ object ConnectionManager {
                         gatt.writeCharacteristic(characteristic, payload, writeType)
                     }
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $characteristicUuid to write to")
+                    Timber.e("Cannot find $characteristicUuid to write to")
                     signalEndOfOperation()
                 }
             }
@@ -272,7 +276,7 @@ object ConnectionManager {
                 gatt.findCharacteristic(characteristicUuid)?.let { characteristic ->
                     gatt.readCharacteristic(characteristic)
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $characteristicUuid to read from")
+                    Timber.e("Cannot find $characteristicUuid to read from")
                     signalEndOfOperation()
                 }
             }
@@ -286,7 +290,7 @@ object ConnectionManager {
                         gatt.writeDescriptor(descriptor, payload)
                     }
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $descriptorUuid to write to")
+                    Timber.e("Cannot find $descriptorUuid to write to")
                     signalEndOfOperation()
                 }
             }
@@ -294,7 +298,7 @@ object ConnectionManager {
                 gatt.findDescriptor(descriptorUuid)?.let { descriptor ->
                     gatt.readDescriptor(descriptor)
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $descriptorUuid to read from")
+                    Timber.e("Cannot find $descriptorUuid to read from")
                     signalEndOfOperation()
                 }
             }
@@ -312,7 +316,7 @@ object ConnectionManager {
 
                     characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
                         if (!gatt.setCharacteristicNotification(characteristic, true)) {
-                            Log.e(Constants.BT_TAG,"setCharacteristicNotification failed " +
+                            Timber.e("setCharacteristicNotification failed " +
                                     "for ${characteristic.uuid}")
                             signalEndOfOperation()
                             return
@@ -326,12 +330,12 @@ object ConnectionManager {
                             gatt.writeDescriptor(cccDescriptor, payload)
                         }
                     } ?: this@ConnectionManager.run {
-                        Log.e(Constants.BT_TAG,"${characteristic.uuid} doesn't contain " +
+                        Timber.e("${characteristic.uuid} doesn't contain " +
                                 "the CCC descriptor!")
                         signalEndOfOperation()
                     }
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $characteristicUuid! " +
+                    Timber.e("Cannot find $characteristicUuid! " +
                             "Failed to enable notifications.")
                     signalEndOfOperation()
                 }
@@ -341,7 +345,7 @@ object ConnectionManager {
                     val cccdUuid = UUID.fromString(Constants.CCC_DESCRIPTOR_UUID)
                     characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
                         if (!gatt.setCharacteristicNotification(characteristic, false)) {
-                            Log.e(Constants.BT_TAG,"setCharacteristicNotification failed " +
+                            Timber.e("setCharacteristicNotification failed " +
                                     "for ${characteristic.uuid}")
                             signalEndOfOperation()
                             return
@@ -356,12 +360,12 @@ object ConnectionManager {
                                 BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
                         }
                     } ?: this@ConnectionManager.run {
-                        Log.e(Constants.BT_TAG,"${characteristic.uuid} doesn't contain " +
+                        Timber.e("${characteristic.uuid} doesn't contain " +
                                 "the CCC descriptor!")
                         signalEndOfOperation()
                     }
                 } ?: this@ConnectionManager.run {
-                    Log.e(Constants.BT_TAG,"Cannot find $characteristicUuid! " +
+                    Timber.e("Cannot find $characteristicUuid! " +
                             "Failed to disable notifications.")
                     signalEndOfOperation()
                 }
@@ -379,7 +383,7 @@ object ConnectionManager {
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
                     if (newState == BluetoothProfile.STATE_CONNECTED) {
-                        Log.i(Constants.BT_TAG, "onConnectionStateChange: connected " +
+                        Timber.i("onConnectionStateChange: connected " +
                                 "to $deviceAddress")
                         deviceGattMap[device] = gatt
                         deviceConnectAttemptsMap.remove(device)
@@ -388,7 +392,7 @@ object ConnectionManager {
                             gatt.discoverServices()
                         }
                     } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Log.i(Constants.BT_TAG, "onConnectionStateChange: disconnected " +
+                        Timber.i("onConnectionStateChange: disconnected " +
                                 "from $deviceAddress")
                         teardownConnection(device)
                     }
@@ -407,13 +411,13 @@ object ConnectionManager {
                         if (connectAttempt < Constants.MAX_CONNECT_ATTEMPTS) {
                             // Retry to connect
                             connectAttempt++
-                            Log.e(Constants.BT_TAG, "Connect operation was not successful " +
+                            Timber.e("Connect operation was not successful " +
                                     "for $deviceAddress, trying again. Attempt #$connectAttempt")
                             deviceConnectAttemptsMap[device] = connectAttempt
                             enqueueOperation(operation)
                         }
                         else {
-                            Log.e(Constants.BT_TAG, "Max connect attempts reached " +
+                            Timber.e("Max connect attempts reached " +
                                     "for $deviceAddress, giving up :(")
                             deviceConnectAttemptsMap.remove(device)
                         }
@@ -424,7 +428,7 @@ object ConnectionManager {
                     signalEndOfOperation()
                 }
                 else -> {
-                    Log.e(Constants.BT_TAG, "onConnectionStateChange: status $status " +
+                    Timber.e("onConnectionStateChange: status $status " +
                             "encountered for $deviceAddress!")
                     if (pendingOperation is Connect) {
                         signalEndOfOperation()
@@ -438,13 +442,13 @@ object ConnectionManager {
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.i(Constants.BT_TAG, "Discovered ${services.size} services " +
+                    Timber.i("Discovered ${services.size} services " +
                             "for ${device.address}.")
                     printGattTable()
                     requestMtu(device, Constants.GATT_CUSTOM_MTU_SIZE)
                     listeners.forEach { it.get()?.onServicesDiscovered?.invoke(this) }
                 } else {
-                    Log.e(Constants.BT_TAG, "Service discovery failed due to status $status")
+                    Timber.e("Service discovery failed due to status $status")
                     teardownConnection(device)
                 }
             }
@@ -455,7 +459,7 @@ object ConnectionManager {
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            Log.i(Constants.BT_TAG, "ATT MTU changed to $mtu, " +
+            Timber.i("ATT MTU changed to $mtu, " +
                     "success: ${status == BluetoothGatt.GATT_SUCCESS}")
             listeners.forEach { it.get()?.onMtuChanged?.invoke(gatt.device, mtu) }
 
@@ -484,17 +488,17 @@ object ConnectionManager {
             with(characteristic) {
                 when (status) {
                     BluetoothGatt.GATT_SUCCESS -> {
-                        Log.i(Constants.BT_TAG,"Read characteristic $uuid | " +
+                        Timber.i("Read characteristic $uuid | " +
                                 "value: ${value.toHexString()}")
                         listeners.forEach {
                             it.get()?.onCharacteristicRead?.invoke(gatt.device, this)
                         }
                     }
                     BluetoothGatt.GATT_READ_NOT_PERMITTED -> {
-                        Log.e(Constants.BT_TAG,"Read not permitted for $uuid!")
+                        Timber.e("Read not permitted for $uuid!")
                     }
                     else -> {
-                        Log.e(Constants.BT_TAG,"Characteristic read failed for $uuid, " +
+                        Timber.e("Characteristic read failed for $uuid, " +
                                 "error: $status")
                     }
                 }
@@ -513,17 +517,17 @@ object ConnectionManager {
             with(characteristic) {
                 when (status) {
                     BluetoothGatt.GATT_SUCCESS -> {
-                        Log.i(Constants.BT_TAG,"Wrote to characteristic $uuid | " +
+                        Timber.i("Wrote to characteristic $uuid | " +
                                 "value: ${value?.toHexString()}")
                         listeners.forEach {
                             it.get()?.onCharacteristicWrite?.invoke(gatt.device, this)
                         }
                     }
                     BluetoothGatt.GATT_WRITE_NOT_PERMITTED -> {
-                        Log.e(Constants.BT_TAG,"Write not permitted for $uuid!")
+                        Timber.e("Write not permitted for $uuid!")
                     }
                     else -> {
-                        Log.e(Constants.BT_TAG,"Characteristic write failed for $uuid, " +
+                        Timber.e("Characteristic write failed for $uuid, " +
                                 "error: $status")
                     }
                 }
@@ -550,7 +554,7 @@ object ConnectionManager {
             value: ByteArray
         ) {
             with(characteristic) {
-                Log.i(Constants.BT_TAG,"Characteristic $uuid changed | " +
+                Timber.i("Characteristic $uuid changed | " +
                         "value: ${value.toHexString()}")
                 listeners.forEach { it.get()?.onCharacteristicChanged?.invoke(
                     gatt.device, this, value
@@ -578,15 +582,15 @@ object ConnectionManager {
             with(descriptor) {
                 when (status) {
                     BluetoothGatt.GATT_SUCCESS -> {
-                        Log.i(Constants.BT_TAG,"Read descriptor $uuid | " +
+                        Timber.i("Read descriptor $uuid | " +
                                 "value: ${value.toHexString()}")
                         listeners.forEach { it.get()?.onDescriptorRead?.invoke(gatt.device, this) }
                     }
                     BluetoothGatt.GATT_READ_NOT_PERMITTED -> {
-                        Log.e(Constants.BT_TAG,"Read not permitted for $uuid!")
+                        Timber.e("Read not permitted for $uuid!")
                     }
                     else -> {
-                        Log.e(Constants.BT_TAG,"Descriptor read failed for $uuid, " +
+                        Timber.e("Descriptor read failed for $uuid, " +
                                 "error: $status")
                     }
                 }
@@ -605,7 +609,7 @@ object ConnectionManager {
             with(descriptor) {
                 when (status) {
                     BluetoothGatt.GATT_SUCCESS -> {
-                        Log.i(Constants.BT_TAG,"Wrote to descriptor $uuid")
+                        Timber.i("Wrote to descriptor $uuid")
 
                         if (isCccd() &&
                             (pendingOperation is EnableNotifications ||
@@ -621,10 +625,10 @@ object ConnectionManager {
                         }
                     }
                     BluetoothGatt.GATT_WRITE_NOT_PERMITTED -> {
-                        Log.e(Constants.BT_TAG,"Write not permitted for $uuid!")
+                        Timber.e("Write not permitted for $uuid!")
                     }
                     else -> {
-                        Log.e(Constants.BT_TAG,"Descriptor write failed for $uuid, " +
+                        Timber.e("Descriptor write failed for $uuid, " +
                                 "error: $status")
                     }
                 }
@@ -649,7 +653,7 @@ object ConnectionManager {
 
             when (operationType) {
                 is EnableNotifications -> {
-                    Log.i(Constants.BT_TAG,"Notifications or indications ENABLED on $charUuid")
+                    Timber.i("Notifications or indications ENABLED on $charUuid")
                     listeners.forEach {
                         it.get()?.onNotificationsEnabled?.invoke(
                             gatt.device,
@@ -658,7 +662,7 @@ object ConnectionManager {
                     }
                 }
                 is DisableNotifications -> {
-                    Log.i(Constants.BT_TAG,"Notifications or indications DISABLED on $charUuid")
+                    Timber.i("Notifications or indications DISABLED on $charUuid")
                     listeners.forEach {
                         it.get()?.onNotificationsDisabled?.invoke(
                             gatt.device,
@@ -667,7 +671,7 @@ object ConnectionManager {
                     }
                 }
                 else -> {
-                    Log.e(Constants.BT_TAG,
+                    Timber.e(
                         "Unexpected operation type of $operationType on CCCD of $charUuid")
                 }
             }
@@ -686,6 +690,7 @@ object ConnectionManager {
             GlobalScope.launch(Dispatchers.IO) {
                 delay(TIMEOUT_CONNECT_MS)
                 if (pendingOperation == operation) {
+                    Timber.i("Cancelling pending Connect operation after timeout!")
                     signalEndOfOperation()
                 }
             }

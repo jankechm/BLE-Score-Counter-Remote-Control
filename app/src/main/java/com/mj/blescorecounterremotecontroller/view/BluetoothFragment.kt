@@ -9,7 +9,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +28,7 @@ import com.mj.blescorecounterremotecontroller.ConnectionManager
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
+import timber.log.Timber
 
 
 /**
@@ -104,7 +104,7 @@ class BluetoothFragment : DialogFragment() {
                         }
                     }
 
-                    Log.i(Constants.BT_TAG, msg)
+                    Timber.i(msg)
                 }
 
                 scanResults.add(result)
@@ -113,7 +113,7 @@ class BluetoothFragment : DialogFragment() {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
+            Timber.e("onScanFailed: code $errorCode")
         }
     }
 
@@ -200,7 +200,7 @@ class BluetoothFragment : DialogFragment() {
                     }
                 }
                 else {
-                    Log.e(Constants.BT_TAG, "Start Scan: BluetoothAdapter is null")
+                    Timber.e("Start Scan: BluetoothAdapter is null")
                 }
             }
             else {
@@ -213,16 +213,14 @@ class BluetoothFragment : DialogFragment() {
             if (selectedScanResult != null) {
                 this.isScanning = false
                 bleScanner.stopBleScan(context)
-                // TODO Allow only one connected device?
-//                ConnectionManager.disconnectAllDevices()
                 try {
                     ConnectionManager.connect(this.selectedScanResult!!.device, requireContext())
                 } catch (e: IllegalStateException) {
-                    Log.e(Constants.BT_TAG, "Missing context!", e)
+                    Timber.e("Missing context!", e)
                 }
             }
             else {
-                Log.w(Constants.BT_TAG, "Connect: ScanResult is null")
+                Timber.w("Connect: ScanResult is null")
             }
         }
 
@@ -300,10 +298,10 @@ class BluetoothFragment : DialogFragment() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == AppCompatActivity.RESULT_OK) {
-                Log.i(Constants.BT_TAG, "Enable Bluetooth activity result OK")
+                Timber.i("Enable Bluetooth activity result OK")
                 this.runScan()
             } else {
-                Log.i(Constants.BT_TAG, "Enable Bluetooth activity result DENIED")
+                Timber.i("Enable Bluetooth activity result DENIED")
                 Toast.makeText(context, "Bluetooth was not enabled!", Toast.LENGTH_LONG).show()
             }
         }

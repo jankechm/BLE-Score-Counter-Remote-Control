@@ -11,7 +11,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.View
 import android.widget.Toast
@@ -37,6 +36,7 @@ import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.viewmodel.DisplayViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 
 class MainActivity : AppCompatActivity() {
@@ -111,43 +111,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // TODO add filtering on name
-//    private val scanFilter = ScanFilter.Builder()
-//        .build()
-//
-//    private val scanSettings = ScanSettings.Builder()
-//        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-//        // TODO Enable after testing W/ and W/O
-////        .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
-//        .build()
-//
-//    private val scanCallback = object : ScanCallback() {
-//        @SuppressLint("MissingPermission")
-//        override fun onScanResult(callbackType: Int, result: ScanResult) {
-//            super.onScanResult(callbackType, result)
-//
-//            if (scanResults.none { it.device.address == result.device.address
-//                        // TODO remove the name comparison, when filtering on name applied
-//                        && it.device.name == result.device.name
-//            }) {
-//                with(result.device) {
-//                    var msg = "Found BLE device! Name: ${name ?: "Unnamed"}, address: $address, UUIDS:"
-//                    // TODO Maybe change uuids to result.scanRecord.serviceUuids
-//                    uuids.forEachIndexed { i, parcelUUid ->
-//                        msg += "\n${i+1}: ${parcelUUid.uuid}"
-//                    }
-//                    Log.i(Constants.BT_TAG, msg)
-//                }
-//                scanResults.add(result)
-//            }
-//        }
-//
-//        override fun onScanFailed(errorCode: Int) {
-//            Log.e(Constants.BT_TAG, "onScanFailed: code $errorCode")
-//        }
-//    }
 
-//    private val scanResults = mutableListOf<ScanResult>()
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
     private var permissionsPermanentlyDenied = false
@@ -592,9 +556,9 @@ class MainActivity : AppCompatActivity() {
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                Log.i(Constants.BT_TAG, "Enable Bluetooth activity result OK")
+                Timber.i("Enable Bluetooth activity result OK")
             } else {
-                Log.i(Constants.BT_TAG, "Enable Bluetooth activity result DENIED")
+                Timber.i("Enable Bluetooth activity result DENIED")
             }
         }
     }

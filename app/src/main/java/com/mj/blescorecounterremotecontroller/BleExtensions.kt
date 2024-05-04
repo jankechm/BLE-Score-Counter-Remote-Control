@@ -4,15 +4,12 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import android.util.Log
+import timber.log.Timber
 import java.util.UUID
 
 fun BluetoothGatt.printGattTable() {
     if (services.isEmpty()) {
-        Log.i(
-            Constants.BT_TAG,
-            "No service and characteristic available, call discoverServices() first?"
-        )
+        Timber.i("No service and characteristic available, call discoverServices() first?")
         return
     }
     services.forEach { service ->
@@ -31,7 +28,7 @@ fun BluetoothGatt.printGattTable() {
             }
             description
         }
-        Log.i(Constants.BT_TAG, "Service ${service.uuid}\nCharacteristics:\n$characteristicsTable")
+        Timber.i("Service ${service.uuid}\nCharacteristics:\n$characteristicsTable")
     }
 }
 

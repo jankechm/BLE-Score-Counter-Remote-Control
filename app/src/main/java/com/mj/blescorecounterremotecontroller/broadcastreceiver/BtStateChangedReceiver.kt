@@ -6,10 +6,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
-import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.toBondStateDescription
+import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,17 +19,17 @@ class BtStateChangedReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-            Log.i(Constants.BT_TAG, "Bluetooth state changed")
+            Timber.i("Bluetooth state changed")
 
             when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)) {
                 BluetoothAdapter.STATE_OFF -> {
-                    Log.i(Constants.BT_TAG, "Bluetooth is off")
+                    Timber.i("Bluetooth is off")
 
                     listeners.forEach { it.get()?.onBluetoothOff?.invoke() }
                 }
 
                 BluetoothAdapter.STATE_ON -> {
-                    Log.i(Constants.BT_TAG, "Bluetooth is on")
+                    Timber.i("Bluetooth is on")
 
                     listeners.forEach { it.get()?.onBluetoothOn?.invoke() }
                 }
@@ -48,7 +47,7 @@ class BtStateChangedReceiver : BroadcastReceiver() {
             val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
             val bondTransition = "${previousBondState.toBondStateDescription()} to " +
                     bondState.toBondStateDescription()
-            Log.i(Constants.BT_TAG, "${device?.address} bond state changed | $bondTransition")
+            Timber.i("${device?.address} bond state changed | $bondTransition")
 
             if (bondState != BluetoothDevice.BOND_BONDING) {
                 // Invoke callback only if "bonded" or "not bonded". Miss "bonding" state.
@@ -62,14 +61,13 @@ class BtStateChangedReceiver : BroadcastReceiver() {
             listeners.add(WeakReference(listener))
             listeners.removeIf { it.get() == null }
 
-            Log.d(Constants.BT_TAG, "Added a BtBroadcastListener, " +
+            Timber.d("Added a BtBroadcastListener, " +
                     "${listeners.size} listeners total")
         }
     }
 
     fun unregisterListener(listener: BtBroadcastListener) {
         listeners.removeIf { it.get() == listener || it.get() == null }
-        Log.d(Constants.BT_TAG, "Removed a BtBroadcastListener, " +
-                "${listeners.size} listeners total")
+        Timber.d("Removed a BtBroadcastListener, ${listeners.size} listeners total")
     }
 }

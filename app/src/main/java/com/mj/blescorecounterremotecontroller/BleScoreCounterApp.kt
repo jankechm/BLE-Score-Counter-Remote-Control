@@ -14,7 +14,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -27,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -60,7 +60,7 @@ class BleScoreCounterApp : Application() {
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
-            onMtuChanged = { btDevice, mtu ->
+            onMtuChanged = { btDevice, _ ->
                 bleDisplay = btDevice
                 writableDisplayChar = ConnectionManager.findCharacteristic(
                     btDevice, Constants.DISPLAY_WRITABLE_CHARACTERISTIC_UUID
@@ -83,7 +83,7 @@ class BleScoreCounterApp : Application() {
                 manuallyDisconnected = false
                 shouldTryConnect = false
             }
-            onNotificationsEnabled = { _,_ -> Log.i(Constants.BT_TAG, "Enabled notification") }
+            onNotificationsEnabled = { _,_ -> Timber.i( "Enabled notification") }
             onDisconnect = { bleDevice ->
                 ConnectionManager.teardownConnection(bleDevice)
 
@@ -129,6 +129,14 @@ class BleScoreCounterApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        if (BuildConfig.DEBUG) {
+            Timber.plant(object : Timber.DebugTree() {
+                override fun createStackElementTag(element: StackTraceElement): String {
+                    return "(${element.fileName}:${element.lineNumber})#${element.methodName}"
+                }
+            })
+        }
+
         val filter = IntentFilter().apply {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
@@ -162,7 +170,7 @@ class BleScoreCounterApp : Application() {
     @OptIn(DelicateCoroutinesApi::class)
     fun startConnectionToPersistedDeviceCoroutine() {
         if (isSomeConnectionCoroutineRunning) {
-            Log.i(Constants.BT_TAG, "Some connection coroutine already running!")
+            Timber.i( "Some connection coroutine already running!")
             return
         }
 
@@ -192,7 +200,7 @@ class BleScoreCounterApp : Application() {
                             delay(connectionDelayMillis)
 
                             if (lastDevice.isConnected()) {
-                                Log.i(Constants.BT_TAG, "Auto-connection to " +
+                                Timber.i( "Auto-connection to " +
                                         "${lastDevice.address} successful!")
                                 break
                             }
@@ -203,8 +211,7 @@ class BleScoreCounterApp : Application() {
                         }
                     }
                 } else {
-                    Log.i(Constants.BT_TAG, "Last BLE device was not bonded, " +
-                            "auto-connection canceled!")
+                    Timber.i( "Last BLE device was not bonded, auto-connection canceled!")
                 }
             }
         }
@@ -215,11 +222,11 @@ class BleScoreCounterApp : Application() {
     @OptIn(DelicateCoroutinesApi::class)
     fun startReconnectionCoroutine() {
         if (isSomeConnectionCoroutineRunning) {
-            Log.i(Constants.BT_TAG, "Some connection coroutine already running!")
+            Timber.i( "Some connection coroutine already running!")
             return
         }
         if (bleDisplay == null) {
-            Log.i(Constants.BT_TAG, "BluetoothDevice is null!")
+            Timber.i( "BluetoothDevice is null!")
             return
         }
 
@@ -239,7 +246,7 @@ class BleScoreCounterApp : Application() {
                 delay(connectionDelayMillis)
 
                 if (bleDisplay!!.isConnected()) {
-                    Log.i(Constants.BT_TAG, "Reconnected to ${bleDisplay!!.address}")
+                    Timber.i( "Reconnected to ${bleDisplay!!.address}")
                     break
                 }
 
@@ -284,8 +291,7 @@ class BleScoreCounterApp : Application() {
         val currDateTime = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("e d.M.yy H:m:s")
 
-        Log.i(Constants.BT_TAG,
-            Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter))
+        Timber.i(Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter))
         ConnectionManager.writeCharacteristic(
             btDevice, characteristic,
             (Constants.SET_TIME_CMD_PREFIX + currDateTime.format(formatter) +

@@ -6,8 +6,8 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
+import timber.log.Timber
 
 class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallback: ScanCallback) {
 
@@ -30,7 +30,7 @@ class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallb
             btAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
         }
         else {
-            Log.i(Constants.BT_TAG, "startBleScan(): BluetoothAdapter is null!")
+            Timber.i("startBleScan(): BluetoothAdapter is null!")
             context?.let {
                 Toast.makeText(it, "Can't access Bluetooth Adapter! Is Bluetooth on?",
                     Toast.LENGTH_LONG).show()
@@ -48,7 +48,7 @@ class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallb
             btAdapter!!.bluetoothLeScanner?.stopScan(scanCallback)
         }
         else {
-            Log.i(Constants.BT_TAG, "stopBleScan(): BluetoothAdapter is null!")
+            Timber.i("stopBleScan(): BluetoothAdapter is null!")
             context?.let {
                 Toast.makeText(it, "Can't access Bluetooth Adapter! Is Bluetooth on?",
                     Toast.LENGTH_LONG).show()

@@ -1,7 +1,6 @@
 package com.mj.blescorecounterremotecontroller.view
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +16,7 @@ import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 class ConfigurationActivity : AppCompatActivity() {
 
@@ -46,7 +46,7 @@ class ConfigurationActivity : AppCompatActivity() {
                         msgBuffer[msgBufferLen-1] == '\n') {
                         // Full message received, process it
                         val msg = msgBuffer.removeSuffix(Constants.CRLF)
-                        Log.d(Constants.BT_TAG, "Full message: $msg")
+                        Timber.d("Full message: $msg")
 
                         if (msg.startsWith(Constants.CONFIG_CMD_PREFIX)) {
                             val jsonStr = msg.removePrefix(Constants.CONFIG_CMD_PREFIX)
@@ -89,12 +89,12 @@ class ConfigurationActivity : AppCompatActivity() {
                                 when (ex) {
                                     is SerializationException,
                                     is IllegalArgumentException -> {
-                                        Log.e(Constants.BT_TAG, "Problem decoding JSON from " +
+                                        Timber.e("Problem decoding JSON from " +
                                                 Constants.CONFIG_CMD_PREFIX, ex
                                         )
                                     }
                                     else -> {
-                                        Log.e(Constants.BT_TAG, "Problem with " +
+                                        Timber.e("Problem with " +
                                                 Constants.CONFIG_CMD_PREFIX, ex
                                         )
                                     }
@@ -133,7 +133,7 @@ class ConfigurationActivity : AppCompatActivity() {
             }
         }
 
-        activityBinding.brightnessSlider.addOnChangeListener { slider, value, fromUser ->
+        activityBinding.brightnessSlider.addOnChangeListener { _, value, fromUser ->
             // Send command through BLE only when the change was initiated by the user.
             // Do not send it if it was changed programmatically.
             if (fromUser) {
