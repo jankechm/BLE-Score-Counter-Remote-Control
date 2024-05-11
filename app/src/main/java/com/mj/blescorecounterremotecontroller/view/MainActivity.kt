@@ -1,8 +1,6 @@
 package com.mj.blescorecounterremotecontroller.view
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -14,15 +12,18 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mj.blescorecounterremotecontroller.AppCfgManager
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
@@ -34,6 +35,7 @@ import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedRe
 import com.mj.blescorecounterremotecontroller.databinding.ActivityMainBinding
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
+import com.mj.blescorecounterremotecontroller.service.BleService
 import com.mj.blescorecounterremotecontroller.viewmodel.DisplayViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -51,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     private val connectionEventListener by lazy {
         ConnectionEventListener().apply {
-            onMtuChanged = { _, _ ->
+            onMtuChanged = { bleDevice, _ ->
                 runOnUiThread {
                     val btMenuItem = mainBinding.topAppBar.menu.
                         findItem(R.id.bluetooth_menu_item)
@@ -62,9 +64,7 @@ class MainActivity : AppCompatActivity() {
                         it.setIcon(R.drawable.bluetooth_connected)
                     }
 
-                    handleBondState()
-
-                    // TODO startForegroundService (Intent service) && startForeground(int, android.app.Notification) || JobScheduler || WorkManager
+                    handleBondState(bleDevice)
                 }
             }
             onDisconnect = { _ ->
@@ -103,18 +103,26 @@ class MainActivity : AppCompatActivity() {
 
     private val btBroadcastListener by lazy {
         BtBroadcastListener().apply {
-            onBondStateChanged = { bondState, _ ->
+            onBondStateChanged = { bondState, bleDevice ->
                 runOnUiThread {
-                    handleBondState(bondState)
+                    if (bleDevice != null) {
+                        handleBondState(bleDevice)
+                    }
                 }
             }
+        }
+    }
+
+    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            showAppClosingDialog()
         }
     }
 
 
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
-    private var permissionsPermanentlyDenied = false
+    private var btPermissionsPermanentlyDenied = false
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
@@ -159,7 +167,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.encryption_menu_item -> {
-                    handleBondState()
+                    if (app.bleDisplay != null) {
+                        handleBondState(app.bleDisplay!!)
+                    }
                     true
                 }
 
@@ -286,39 +296,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         mainBinding.allLedsOnBtn.setOnClickListener {
-            if (app.bleDisplay != null) {
-                if (app.writableDisplayChar != null) {
-                    var value = 1
-                    if (allLEDsOn) {
-                        value = 0
-                        mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
-                            this@MainActivity, R.color.all_leds_on_0
-                        )
-                        allLEDsOn = false
-                    }
-                    else {
-                        mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
-                            this@MainActivity, R.color.all_leds_on_1
-                        )
-                        allLEDsOn = true
-                    }
-                    val updateScoreCmd = Constants.SET_ALL_LEDS_ON_CMD_PREFIX + value +
-                            Constants.CRLF
-                    ConnectionManager.writeCharacteristic(
-                        app.bleDisplay!!, app.writableDisplayChar!!,
-                        updateScoreCmd.toByteArray(Charsets.US_ASCII)
-                    )
-                }
-            }
+            onAllLedsOnBtnClick()
         }
 
-        if (app.bleDisplay == null || !app.bleDisplay!!.isConnected()) {
+        if (AppCfgManager.appCfg.autoConnectOnStart && !app.manuallyDisconnected &&
+                (app.bleDisplay == null || !app.bleDisplay!!.isConnected())) {
+            Timber.i("Connecting to persisted device...")
             app.startConnectionToPersistedDeviceCoroutine()
         }
+
+        app.isShuttingDown = false
+
+        onBackPressedDispatcher.addCallback(onBackPressedCallback)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.top_menu, menu)
+
+        this.updateTopAppBarIcons()
+
         return true
     }
 //
@@ -359,7 +355,7 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                handleBondState(app.bleDisplay!!.bondState)
+                handleBondState(app.bleDisplay!!)
             }
         }
     }
@@ -377,12 +373,14 @@ class MainActivity : AppCompatActivity() {
         ConnectionManager.unregisterListener(connectionEventListener)
     }
 
+
     /**
      * If some permissions were denied, show a rationale with explanation why the permissions are
      * needed and ask for them again.
      *
-     * If some permissions were permanently denied, explain to the users that the app cannot work
-     * without them and navigate users to app settings to manually enable them.
+     * If some permissions were permanently denied, explain to the users what features will not work
+     * and navigate users to the app settings to manually enable the permissions if they want
+     * features to work.
      */
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -391,26 +389,49 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == Constants.BT_PERMISSIONS_REQUEST_CODE) {
-            val containsPermanentDenial = permissions
-                .zip(grantResults.toTypedArray())
-                .any {
-                    it.second == PackageManager.PERMISSION_DENIED &&
-                        !ActivityCompat.shouldShowRequestPermissionRationale(this, it.first)
+        when (requestCode) {
+            Constants.BT_PERMISSIONS_REQUEST_CODE,
+            Constants.NOTIFICATIONS_PERMISSIONS_REQUEST_CODE -> {
+                val containsPermanentDenial = permissions
+                    .zip(grantResults.toTypedArray())
+                    .any {
+                        it.second == PackageManager.PERMISSION_DENIED &&
+                                !ActivityCompat.shouldShowRequestPermissionRationale(
+                                    this, it.first)
+                    }
+                val containsDenial = grantResults.any {
+                    it == PackageManager.PERMISSION_DENIED
                 }
-            val containsDenial = grantResults.any { it == PackageManager.PERMISSION_DENIED }
-            val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+                val allGranted = grantResults.all {
+                    it == PackageManager.PERMISSION_GRANTED
+                }
 
-            when {
-                containsPermanentDenial -> {
-                    this.permissionsPermanentlyDenied = true
-                    this.showStepsToManuallyEnablePermissions()
+                if (requestCode == Constants.BT_PERMISSIONS_REQUEST_CODE) {
+                    when {
+                        containsPermanentDenial -> {
+                            this.btPermissionsPermanentlyDenied = true
+                            this.showStepsToManuallyEnableBtPermissions()
+                        }
+                        containsDenial -> {
+                            this.showRequestBtPermissionsRationale()
+                        }
+                        allGranted -> {
+                            btPermissionsPermanentlyDenied = false
+                            this.showBtFragment()
+                        }
+                    }
                 }
-                containsDenial -> {
-                    this.showRequestBtPermissionsRationale()
-                }
-                allGranted -> {
-                    this.showBtFragment()
+                else {
+                    when {
+                        containsPermanentDenial -> {
+                            this.showStepsToManuallyEnableNotificationsPermissions()
+                        }
+                        containsDenial -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                this.showRequestNotificationsPermissionsRationale()
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -420,15 +441,16 @@ class MainActivity : AppCompatActivity() {
         if (this.isBleSupported()) {
 
             if (app.hasBtPermissions()) {
-//                    this.promptEnableBluetooth()
+                btPermissionsPermanentlyDenied = false
                 this.showBtFragment()
             }
             else {
-                app.requestBtPermissions(this)
-//                if (this.hasBtPermissions()) {
-//                    btFragment.show(supportFragmentManager, "BluetoothFragment")
-//                }
-//                    this.promptEnableBluetooth()
+                if (btPermissionsPermanentlyDenied) {
+                    showStepsToManuallyEnableBtPermissions()
+                }
+                else {
+                    app.requestBtPermissions(this)
+                }
             }
         }
         else {
@@ -546,6 +568,33 @@ class MainActivity : AppCompatActivity() {
         btFragment.show(supportFragmentManager, "BluetoothFragment")
     }
 
+    private fun onAllLedsOnBtnClick() {
+        if (app.bleDisplay != null) {
+            if (app.writableDisplayChar != null) {
+                var value = 1
+                if (allLEDsOn) {
+                    value = 0
+                    mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
+                        this@MainActivity, R.color.all_leds_on_0
+                    )
+                    allLEDsOn = false
+                }
+                else {
+                    mainBinding.allLedsOnBtn.backgroundTintList = ContextCompat.getColorStateList(
+                        this@MainActivity, R.color.all_leds_on_1
+                    )
+                    allLEDsOn = true
+                }
+                val updateScoreCmd = Constants.SET_ALL_LEDS_ON_CMD_PREFIX + value +
+                        Constants.CRLF
+                ConnectionManager.writeCharacteristic(
+                    app.bleDisplay!!, app.writableDisplayChar!!,
+                    updateScoreCmd.toByteArray(Charsets.US_ASCII)
+                )
+            }
+        }
+    }
+
     private fun isBleSupported(): Boolean {
         return this.btAdapter != null
                 && packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
@@ -563,92 +612,138 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//    private fun promptEnableBluetooth() {
-//        if (this.btAdapter == null) {
-//            Log.i(Constants.BT_TAG, "BluetoothAdapter is null")
-//        }
-//        else {
-//            if (!this.btAdapter!!.isEnabled) {
-//                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//
-//                if (this.hasBtPermissions()) {
-//                    this.activityResultLauncher.launch(enableBtIntent)
-//                }
-//                else {
-//                    this.requestBtPermissions()
-//                }
-//            }
-//        }
-//    }
-
-
-
     private fun showRequestBtPermissionsRationale() {
-        val alertBuilder = AlertDialog.Builder(this)
+        val alertBuilder = MaterialAlertDialogBuilder(this)
 
         with(alertBuilder)
         {
-            setTitle("Bluetooth permission required")
-            setMessage("Starting from Android 12, the system requires apps to be granted " +
-                    "Bluetooth access in order to scan for and connect to BLE devices.")
-            setPositiveButton("OK") { _,_ -> app.requestBtPermissions(this@MainActivity) }
-            setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            setTitle(getString(R.string.bt_perms_rationale_title))
+            setMessage(getString(R.string.bt_perms_rationale_msg))
+            setPositiveButton(getString(R.string.bt_perms_rationale_positive_btn)) { _, _ ->
+                app.requestBtPermissions(this@MainActivity)
+            }
+            setNegativeButton(getString(R.string.bt_perms_rationale_negative_btn)) { dialog, _ ->
+                dialog.dismiss()
+            }
             setCancelable(false)
             show()
         }
     }
 
-    private fun showStepsToManuallyEnablePermissions() {
-        AlertDialog.Builder(this)
-            .setTitle("Bluetooth permissions were permanently denied!")
-            .setMessage("Please, navigate to App Settings and manually grant Bluetooth " +
-                    "permissions to allow connection to BLE Score Counter.")
-            .setPositiveButton("OK") { _, _ -> }
+    private fun showStepsToManuallyEnableBtPermissions() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.permanently_denied_bt_perms_title))
+            .setMessage(getString(R.string.permanently_denied_bt_perms_msg))
+            .setPositiveButton(getString(R.string.permanently_denied_bt_perms_positive_btn)) { _, _ -> }
             .show()
     }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun showRequestNotificationsPermissionsRationale() {
+        val alertBuilder = MaterialAlertDialogBuilder(this)
+
+        with(alertBuilder)
+        {
+            setTitle(getString(R.string.notifications_perms_rationale_title))
+            setMessage(getString(R.string.notifications_perms_rationale_msg))
+            setPositiveButton(getString(R.string.notifications_perms_rationale_positive_btn))
+            { _, _ ->
+                app.requestNotificationsPermission(this@MainActivity)
+            }
+            setNegativeButton(getString(R.string.notifications_perms_rationale_negative_btn))
+            { dialog, _ ->
+                dialog.dismiss()
+            }
+            setCancelable(false)
+            show()
+        }
+    }
+
+    private fun showStepsToManuallyEnableNotificationsPermissions() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.permanently_denied_notifications_perms_title))
+            .setMessage(getString(R.string.permanently_denied_notifications_perms_msg))
+            .setPositiveButton(getString(R.string.permanently_denied_notifications_perms_positive_btn)) { _, _ -> }
+            .show()
+    }
+
+    fun showAppClosingDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.close_app_dialog_title))
+            .setMessage(getString(R.string.close_app_dialog_msg))
+            .setPositiveButton(getString(R.string.close_app_dialog_positive_btn)) { _, _ ->
+                // Stop the foreground service
+                stopService(Intent(this@MainActivity, BleService::class.java))
+                // Disconnect all Bluetooth devices and avoid auto-reconnect
+                app.isShuttingDown = true
+                ConnectionManager.disconnectAllDevices()
+                // Finish all activities
+                finishAffinity()
+//                android.os.Process.killProcess(android.os.Process.myPid())
+            }
+            .setNegativeButton(getString(R.string.close_app_dialog_negative_btn)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
 
     fun dpToPixels(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }
 
-    @SuppressLint("MissingPermission")
-    private fun handleBondState() {
-        if (app.bleDisplay != null) {
-            mainBinding.topAppBar.menu.findItem(R.id.encryption_menu_item)?.let {
+    private fun handleBondState(bleDevice: BluetoothDevice) {
+        mainBinding.topAppBar.menu.findItem(R.id.encryption_menu_item)?.let {
+            if (bleDevice.isConnected()) {
                 it.isVisible = true
-                if (app.bleDisplay!!.bondState == BluetoothDevice.BOND_BONDED) {
-                    it.setIcon(R.drawable.encryption)
-                    it.iconTintList = ContextCompat.getColorStateList(
-                        this@MainActivity, R.color.encryption_on)
-                } else {
-                    it.setIcon(R.drawable.no_encryption)
-                    it.iconTintList = ContextCompat.getColorStateList(
-                        this@MainActivity, R.color.black)
-                    if (AppCfgManager.appCfg.askToBond) {
-                        app.bleDisplay!!.createBond()
+
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    if (bleDevice.bondState == BluetoothDevice.BOND_BONDED) {
+                        it.setIcon(R.drawable.encryption)
+                        it.iconTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.encryption_on)
+                    } else {
+                        it.setIcon(R.drawable.no_encryption)
+                        it.iconTintList = ContextCompat.getColorStateList(
+                            this@MainActivity, R.color.black)
+                        if (AppCfgManager.appCfg.askToBond) {
+                            bleDevice.createBond()
+                        }
                     }
                 }
+            }
+            else {
+                it.isVisible = false
             }
         }
     }
 
-    private fun handleBondState(bondState: Int) {
-        if (bondState == BluetoothDevice.BOND_BONDED) {
-            val encryptionMenuItem = mainBinding.topAppBar.menu.
-            findItem(R.id.encryption_menu_item)
-            encryptionMenuItem?.let {
-                it.setIcon(R.drawable.encryption)
+    private fun updateTopAppBarIcons() {
+        mainBinding.topAppBar.menu.findItem(R.id.bluetooth_menu_item)?.let {
+            if (app.bleDisplay != null && app.bleDisplay!!.isConnected()) {
                 it.iconTintList = ContextCompat.getColorStateList(
-                    this@MainActivity, R.color.encryption_on)
+                    this@MainActivity, R.color.bt_connected
+                )
+                it.setIcon(R.drawable.bluetooth_connected)
+
+                handleBondState(app.bleDisplay!!)
             }
-        }
-        else if (bondState == BluetoothDevice.BOND_NONE) {
-            val encryptionMenuItem = mainBinding.topAppBar.menu.
-            findItem(R.id.encryption_menu_item)
-            encryptionMenuItem?.let {
-                it.setIcon(R.drawable.no_encryption)
-                it.iconTintList = ContextCompat.getColorStateList(
-                    this@MainActivity, R.color.black)
+            else {
+                if (app.manuallyDisconnected) {
+                    it.iconTintList = ContextCompat.getColorStateList(
+                        this@MainActivity, R.color.bt_disconnected
+                    )
+                    it.setIcon(R.drawable.bluetooth_disabled)
+                } else {
+                    it.iconTintList = ContextCompat.getColorStateList(
+                        this@MainActivity, R.color.black
+                    )
+                    it.setIcon(R.drawable.bluetooth)
+                }
             }
         }
     }

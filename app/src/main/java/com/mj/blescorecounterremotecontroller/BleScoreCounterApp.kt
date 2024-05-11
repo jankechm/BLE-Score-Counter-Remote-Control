@@ -9,21 +9,24 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.mj.blescorecounterremotecontroller.service.BleService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -34,10 +37,11 @@ class BleScoreCounterApp : Application() {
     companion object {
         const val PREFS_NAME = "Prefs"
         const val PREF_LAST_DEVICE_ADDRESS = "lastDeviceAddress"
-        const val maxRetries = 3
-        const val initialDelayMillis = 100L
-        const val connectionDelayMillis = 2_000L
-        const val retryDelayMillis = 24_000L
+    }
+
+    enum class ReconnectionType {
+        PERSISTED_DEVICE,
+        LAST_DEVICE
     }
 
     private val btAdapter: BluetoothAdapter? by lazy {
@@ -45,12 +49,14 @@ class BleScoreCounterApp : Application() {
         bluetoothManager.adapter
     }
 
+    private val applicationScope = CoroutineScope(SupervisorJob())
+
     var bleDisplay: BluetoothDevice? = null
     var writableDisplayChar: BluetoothGattCharacteristic? = null
 
     var manuallyDisconnected = false
+    var isShuttingDown = false
     var shouldTryConnect = false
-
     private var isSomeConnectionCoroutineRunning = false
 
     private val btStateChangedReceiver = BtStateChangedReceiver()
@@ -82,6 +88,13 @@ class BleScoreCounterApp : Application() {
 
                 manuallyDisconnected = false
                 shouldTryConnect = false
+
+
+
+                // TODO start only if btDevice is a smartwatch
+                val intent = Intent(this@BleScoreCounterApp, BleService::class.java)
+                startForegroundService(intent)
+
             }
             onNotificationsEnabled = { _,_ -> Timber.i( "Enabled notification") }
             onDisconnect = { bleDevice ->
@@ -89,8 +102,13 @@ class BleScoreCounterApp : Application() {
 
                 writableDisplayChar = null
 
-                if (!manuallyDisconnected) {
+                if (!manuallyDisconnected && !isShuttingDown) {
                     startReconnectionCoroutine()
+                }
+                // TODO should stopService only when the bleDevice is a smartwatch?
+                else {
+//                    val intent = Intent(this@BleScoreCounterApp, BleService::class.java)
+//                    stopService(intent)
                 }
 
                 handler.post {
@@ -154,7 +172,7 @@ class BleScoreCounterApp : Application() {
     }
 
 
-    fun saveLastDeviceAddress(deviceAddress: String) {
+    private fun saveLastDeviceAddress(deviceAddress: String) {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().apply {
             putString(PREF_LAST_DEVICE_ADDRESS, deviceAddress)
@@ -167,48 +185,29 @@ class BleScoreCounterApp : Application() {
         return prefs.getString(PREF_LAST_DEVICE_ADDRESS, null)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun startConnectionToPersistedDeviceCoroutine() {
         if (isSomeConnectionCoroutineRunning) {
             Timber.i( "Some connection coroutine already running!")
             return
         }
 
-        isSomeConnectionCoroutineRunning = true
-
         val lastDeviceAddress = getLastDeviceAddress()
 
-        var connectionAttempts = 0
-
-        shouldTryConnect = true
-
         if (btAdapter != null && lastDeviceAddress != null) {
-            val lastDevice: BluetoothDevice? = btAdapter!!.getRemoteDevice(lastDeviceAddress)
+            val lastDevice: BluetoothDevice? =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                btAdapter!!.getRemoteLeDevice(lastDeviceAddress, BluetoothDevice.ADDRESS_TYPE_PUBLIC)
+            } else {
+                btAdapter!!.getRemoteDevice(lastDeviceAddress)
+            }
 
             if (lastDevice != null) {
                 if (ActivityCompat.checkSelfPermission(
                         this, Manifest.permission.BLUETOOTH_CONNECT
                     ) == PackageManager.PERMISSION_GRANTED &&
                         lastDevice.bondState == BluetoothDevice.BOND_BONDED) {
-                    GlobalScope.launch(Dispatchers.IO) {
-                        delay(initialDelayMillis)
-                        while (shouldTryConnect && btAdapter!!.isEnabled) {
-                            if (ConnectionManager.pendingOperation !is Connect) {
-                                ConnectionManager.connect(lastDevice, this@BleScoreCounterApp)
-                            }
-                            connectionAttempts++
-                            delay(connectionDelayMillis)
-
-                            if (lastDevice.isConnected()) {
-                                Timber.i( "Auto-connection to " +
-                                        "${lastDevice.address} successful!")
-                                break
-                            }
-
-                            if (connectionAttempts % maxRetries == 0) {
-                                delay(retryDelayMillis)
-                            }
-                        }
+                    applicationScope.launch(Dispatchers.IO) {
+                        tryConnect(lastDevice, ReconnectionType.PERSISTED_DEVICE)
                     }
                 } else {
                     Timber.i( "Last BLE device was not bonded, auto-connection canceled!")
@@ -219,40 +218,53 @@ class BleScoreCounterApp : Application() {
         isSomeConnectionCoroutineRunning = false
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun startReconnectionCoroutine() {
-        if (isSomeConnectionCoroutineRunning) {
-            Timber.i( "Some connection coroutine already running!")
-            return
-        }
         if (bleDisplay == null) {
             Timber.i( "BluetoothDevice is null!")
             return
         }
 
-        isSomeConnectionCoroutineRunning = true
+        applicationScope.launch(Dispatchers.IO) {
+            tryConnect(bleDisplay!!, ReconnectionType.LAST_DEVICE)
+        }
+    }
 
-        shouldTryConnect = true
+    private suspend fun tryConnect(bleDevice: BluetoothDevice, reconnectionType: ReconnectionType) {
+        if (isSomeConnectionCoroutineRunning) {
+            Timber.i( "Some connection coroutine already running!")
+            return
+        }
+
+        val maxImmediateRetries = 3
+        val initialDelayMillis = 100L
+        val connectionDelayMillis = 2_000L
+        val retryDelayMillis = 24_000L
 
         var connectionAttempts = 0
 
-        GlobalScope.launch(Dispatchers.IO) {
-            delay(initialDelayMillis)
-            while (shouldTryConnect && btAdapter != null && btAdapter!!.isEnabled) {
-                if (ConnectionManager.pendingOperation !is Connect) {
-                    ConnectionManager.connect(bleDisplay!!, this@BleScoreCounterApp)
-                }
-                connectionAttempts++
-                delay(connectionDelayMillis)
+        isSomeConnectionCoroutineRunning = true
+        shouldTryConnect = true
 
-                if (bleDisplay!!.isConnected()) {
-                    Timber.i( "Reconnected to ${bleDisplay!!.address}")
-                    break
-                }
+        delay(initialDelayMillis)
+        while (shouldTryConnect && btAdapter != null && btAdapter!!.isEnabled && !isShuttingDown) {
+            if (ConnectionManager.pendingOperation !is Connect) {
+                ConnectionManager.connect(bleDevice, this@BleScoreCounterApp)
+            }
+            connectionAttempts++
+            delay(connectionDelayMillis)
 
-                if (connectionAttempts % maxRetries == 0) {
-                    delay(retryDelayMillis)
+            if (bleDevice.isConnected()) {
+                if (reconnectionType == ReconnectionType.PERSISTED_DEVICE) {
+                    Timber.i( "Auto-connection to persisted device " +
+                            "${bleDevice.address} successful!")
+                } else {
+                    Timber.i( "Reconnected to last device ${bleDevice.address}!")
                 }
+                break
+            }
+
+            if (connectionAttempts % maxImmediateRetries == 0) {
+                delay(retryDelayMillis)
             }
         }
 
@@ -267,6 +279,10 @@ class BleScoreCounterApp : Application() {
         hasPermission(Manifest.permission.BLUETOOTH_SCAN)
                 && hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun hasNotificationsPermission(): Boolean =
+        hasPermission(Manifest.permission.POST_NOTIFICATIONS)
+
     fun requestBtPermissions(activity: Activity) {
         ActivityCompat.requestPermissions(activity,
             arrayOf(
@@ -276,6 +292,14 @@ class BleScoreCounterApp : Application() {
             Constants.BT_PERMISSIONS_REQUEST_CODE
         )
     }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun requestNotificationsPermission(activity: Activity) {
+        ActivityCompat.requestPermissions(activity,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            Constants.NOTIFICATIONS_PERMISSIONS_REQUEST_CODE)
+    }
+
 
     @SuppressLint("MissingPermission")
     fun handleBonding(btDevice: BluetoothDevice) {

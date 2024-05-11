@@ -34,4 +34,24 @@
     <string name="alternate_text_rb_text">Alternate Text</string>
     <string name="scroll_text_rb_text">Scroll Text</string>
     <string name="all_leds_on_desc">All LEDs on</string>
+    <string name="ble_service_desc">A service which handles communication between a smartwatch and
+        the score counter</string>
+    <string name="close_app_dialog_title">Close application?</string>
+    <string name="close_app_dialog_msg">Do you really want to close the app?</string>
+    <string name="close_app_dialog_positive_btn">Yes</string>
+    <string name="close_app_dialog_negative_btn">No</string>
+    <string name="bt_perms_rationale_title">Bluetooth permission required</string>
+    <string name="bt_perms_rationale_msg">Starting from Android 12, the system requires apps to be granted Bluetooth access in order to scan for and connect to BLE devices.</string>
+    <string name="bt_perms_rationale_positive_btn">Ask for permissions again</string>
+    <string name="bt_perms_rationale_negative_btn">Cancel</string>
+    <string name="notifications_perms_rationale_title">Notifications permission required</string>
+    <string name="notifications_perms_rationale_msg">The system requires apps to be granted notifications permission in order to display a notification for the running foreground service which handles communication with a smartwatch. If you don\'t allow the permission, the service can run, but the notification won\'t be displayed.</string>
+    <string name="notifications_perms_rationale_positive_btn">Ask for permissions again</string>
+    <string name="notifications_perms_rationale_negative_btn">Cancel</string>
+    <string name="permanently_denied_bt_perms_title">Bluetooth permissions were permanently denied!</string>
+    <string name="permanently_denied_bt_perms_msg">Please, navigate to App Settings and manually grant Bluetooth permissions to allow connection to BLE Score Counter.</string>
+    <string name="permanently_denied_bt_perms_positive_btn">OK</string>
+    <string name="permanently_denied_notifications_perms_title">Notifications permission was permanently denied!</string>
+    <string name="permanently_denied_notifications_perms_msg">If you change your mind and want the notification to be displayed, please, navigate to App Settings and manually grant Notifications permission to allow a foreground service notification to be displayed.</string>
+    <string name="permanently_denied_notifications_perms_positive_btn">OK</string>
 </resources>

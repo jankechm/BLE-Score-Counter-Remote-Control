@@ -16,9 +16,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -40,6 +40,8 @@ object ConnectionManager {
         private set
 
     private val handler: Handler = Handler(Looper.getMainLooper())
+
+    private val cmCoroutineScope = CoroutineScope(SupervisorJob())
 
 
     fun findCharacteristic(
@@ -230,7 +232,7 @@ object ConnectionManager {
         if (operation is Connect) {
             with(operation) {
                 Timber.i("Connecting to ${device.address}")
-                cancelConnectAfterTimeout(operation)
+                cancelOperationAfterTimeout(operation, TIMEOUT_CONNECT_MS)
                 device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
             }
             return
@@ -684,15 +686,13 @@ object ConnectionManager {
      * Cancel Connect operation after a specified timeout.
      * It runs a coroutine.
      */
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun cancelConnectAfterTimeout(operation: BleOperationType) {
-        if (operation is Connect) {
-            GlobalScope.launch(Dispatchers.IO) {
-                delay(TIMEOUT_CONNECT_MS)
-                if (pendingOperation == operation) {
-                    Timber.i("Cancelling pending Connect operation after timeout!")
-                    signalEndOfOperation()
-                }
+    private fun cancelOperationAfterTimeout(operation: BleOperationType, timeoutMs: Long) {
+        cmCoroutineScope.launch(Dispatchers.IO) {
+            delay(timeoutMs)
+            if (pendingOperation === operation) {
+                Timber.i("Cancelling pending operation " +
+                        "${operation::class.java.simpleName} after timeout!")
+                signalEndOfOperation()
             }
         }
     }

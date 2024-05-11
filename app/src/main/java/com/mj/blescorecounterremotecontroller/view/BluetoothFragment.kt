@@ -25,6 +25,7 @@ import com.mj.blescorecounterremotecontroller.BLEDevicesAdapter
 import com.mj.blescorecounterremotecontroller.BLEScanner
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
 import com.mj.blescorecounterremotecontroller.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
@@ -214,7 +215,9 @@ class BluetoothFragment : DialogFragment() {
                 this.isScanning = false
                 bleScanner.stopBleScan(context)
                 try {
-                    ConnectionManager.connect(this.selectedScanResult!!.device, requireContext())
+                    if (!selectedScanResult!!.device.isConnected()) {
+                        ConnectionManager.connect(selectedScanResult!!.device, requireContext())
+                    }
                 } catch (e: IllegalStateException) {
                     Timber.e("Missing context!", e)
                 }

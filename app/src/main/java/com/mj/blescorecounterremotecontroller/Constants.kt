@@ -7,6 +7,7 @@ class Constants {
         const val BLE_DISPLAY_NAME = "Score-counter-BLE"
 
         const val BT_PERMISSIONS_REQUEST_CODE = 1
+        const val NOTIFICATIONS_PERMISSIONS_REQUEST_CODE = 2
 
         const val ALREADY_CONNECTED_PARAM = "already_connected"
 

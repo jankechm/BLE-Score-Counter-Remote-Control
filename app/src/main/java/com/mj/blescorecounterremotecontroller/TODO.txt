@@ -37,4 +37,11 @@ Characteristics:
 
 - Instruct users to turn off battery optimizations for this app. Check https://dontkillmyapp.com/
 
-- Set foreground service start after 5s delay to test that it truly starts from the bg.
+- Foreground service should start only if smartwatch is connected and stop if disconnected.
+  Check and request POST_NOTIFICATIONS permission in runtime when needed.
+
+- Configurable speed of score change rendering and alternating.
+
+- Disconnect button should work always! Maybe use it also as a "Reset connection" button.
+  It should remove gatt object, reset queue, set pending operation to null.
+  And maybe also close the dialog anyway. Disconnect as only operation. And update UI in MainActivity.
