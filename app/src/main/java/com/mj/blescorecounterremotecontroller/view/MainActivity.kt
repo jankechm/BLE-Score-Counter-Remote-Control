@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
 
     private val btBroadcastListener by lazy {
         BtBroadcastListener().apply {
-            onBondStateChanged = { bondState, bleDevice ->
+            onBondStateChanged = { _, bleDevice ->
                 runOnUiThread {
                     if (bleDevice != null) {
                         handleBondState(bleDevice)

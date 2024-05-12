@@ -30,10 +30,14 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 object ConnectionManager {
 
-    const val TIMEOUT_CONNECT_MS = 1500L
+    const val TIMEOUT_CONNECT_MS = 1000L
+    const val TIMEOUT_MTU_REQUEST_MS = 1000L
+    const val TIMEOUT_DISCONNECT_MS = 1000L
+    const val TIMEOUT_CHAR_WRITE_MS = 300L
 
     private var listeners: MutableSet<WeakReference<ConnectionEventListener>> = ConcurrentHashMap.newKeySet()
     private val deviceGattMap = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
+    private val deviceServicesDiscoveredMap = ConcurrentHashMap<BluetoothDevice, Boolean>()
     private val deviceConnectAttemptsMap = ConcurrentHashMap<BluetoothDevice, Int>()
     private val operationQueue = ConcurrentLinkedQueue<BleOperationType>()
     var pendingOperation: BleOperationType? = null
@@ -66,7 +70,8 @@ object ConnectionManager {
 
     fun connect(device: BluetoothDevice, context: Context) {
         if (device.isConnected()) {
-            Timber.w("Already connected to ${device.address}!")
+            Timber.w("Already connected to ${device.address}! " +
+                    "Connect operation not enqueued!")
         } else {
             enqueueOperation(Connect(device, context.applicationContext))
         }
@@ -82,6 +87,7 @@ object ConnectionManager {
     }
 
     fun disconnectAllDevices() {
+        Timber.i("Disconnecting all devices.")
         val disconnectOps = deviceGattMap.keys.map { Disconnect(it) }.toList()
         disconnectOps.forEach { enqueueOperation(it) }
     }
@@ -189,18 +195,19 @@ object ConnectionManager {
     @Synchronized
     private fun enqueueOperation(operation: BleOperationType) {
         if (operationQueue.size < Constants.MAX_OPS_QUEUE_SIZE) {
-            if (!(pendingOperation is Connect && operation is Connect)) {
-                operationQueue.add(operation)
-            }
+            Timber.i("Adding ${operation::class.java.simpleName} operation to the queue." +
+                    "Queue size: ${operationQueue.size}")
+            operationQueue.add(operation)
             if (pendingOperation == null) {
                 doNextOperation()
             }
         } else {
-            Timber.i("Queue is full! Last operation not enqueued!")
-            if (pendingOperation is Connect) {
-                Timber.i("Cancelling pending Connect operation!")
-                signalEndOfOperation()
-            }
+            Timber.i("Queue is full! ${operation::class.java.simpleName} operation " +
+                    "not enqueued!")
+//            if (pendingOperation is Connect || pendingOperation is Disconnect) {
+//                Timber.i("Cancelling pending operation ${operation::class.java.simpleName}!")
+//                signalEndOfOperation()
+//            }
         }
     }
 
@@ -231,9 +238,16 @@ object ConnectionManager {
         // Handle Connect separately from other operations that require device to be connected
         if (operation is Connect) {
             with(operation) {
-                Timber.i("Connecting to ${device.address}")
-                cancelOperationAfterTimeout(operation, TIMEOUT_CONNECT_MS)
-                device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
+                if (!device.isConnected()) {
+                    Timber.i("Connecting to ${device.address}")
+                    // Deadlock prevention - set timeout
+                    cancelOperationAndRequeueAfterTimeout(operation, TIMEOUT_CONNECT_MS)
+                    device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
+                }
+                else {
+                    // End operation if already connected
+                    signalEndOfOperation()
+                }
             }
             return
         }
@@ -250,17 +264,23 @@ object ConnectionManager {
         when (operation) {
             is Disconnect -> with(operation) {
                 Timber.i("Disconnecting from ${device.address}")
+                // Deadlock prevention - set timeout
+                cancelOperationAndRequeueAfterTimeout(operation, TIMEOUT_DISCONNECT_MS)
                 gatt.disconnect()
                 gatt.close()
                 deviceGattMap.remove(device)
+                deviceServicesDiscoveredMap.remove(device)
                 listeners.forEach { it.get()?.onDisconnect?.invoke(device) }
                 signalEndOfOperation()
             }
             is MtuRequest -> with(operation) {
+                // Deadlock prevention - set timeout
+                cancelOperationAndRequeueAfterTimeout(operation, TIMEOUT_MTU_REQUEST_MS)
                 gatt.requestMtu(mtu)
             }
             is CharacteristicWrite -> with(operation) {
                 gatt.findCharacteristic(characteristicUuid)?.let { characteristic ->
+                    cancelOperationAndRequeueAfterTimeout(operation, TIMEOUT_CHAR_WRITE_MS)
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         characteristic.writeType = writeType
                         characteristic.value = payload
@@ -447,6 +467,7 @@ object ConnectionManager {
                     Timber.i("Discovered ${services.size} services " +
                             "for ${device.address}.")
                     printGattTable()
+                    deviceServicesDiscoveredMap[device] = true
                     requestMtu(device, Constants.GATT_CUSTOM_MTU_SIZE)
                     listeners.forEach { it.get()?.onServicesDiscovered?.invoke(this) }
                 } else {
@@ -680,18 +701,21 @@ object ConnectionManager {
         }
     }
 
-    fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this)
+    fun BluetoothDevice.isConnected() = deviceGattMap.containsKey(this) &&
+            deviceServicesDiscoveredMap[this] == true
 
     /**
      * Cancel Connect operation after a specified timeout.
      * It runs a coroutine.
      */
-    private fun cancelOperationAfterTimeout(operation: BleOperationType, timeoutMs: Long) {
+    private fun cancelOperationAndRequeueAfterTimeout(operation: BleOperationType, timeoutMs: Long) {
         cmCoroutineScope.launch(Dispatchers.IO) {
             delay(timeoutMs)
             if (pendingOperation === operation) {
                 Timber.i("Cancelling pending operation " +
-                        "${operation::class.java.simpleName} after timeout!")
+                        "${operation::class.java.simpleName} after timeout! Adding it again " +
+                        "to the end of the queue!")
+                enqueueOperation(operation)
                 signalEndOfOperation()
             }
         }

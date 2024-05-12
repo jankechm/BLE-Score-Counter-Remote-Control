@@ -2,8 +2,6 @@ package com.mj.blescorecounterremotecontroller
 
 class Constants {
     companion object {
-        const val BT_TAG = "Bluetooth"
-
         const val BLE_DISPLAY_NAME = "Score-counter-BLE"
 
         const val BT_PERMISSIONS_REQUEST_CODE = 1
@@ -17,7 +15,6 @@ class Constants {
 
         /** UUID of the Client Characteristic Configuration Descriptor (0x2902). */
         const val CCC_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805F9B34FB"
-        const val DISPLAY_SERVICE_3_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb"
         const val DISPLAY_WRITABLE_CHARACTERISTIC_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"
 
         const val GATT_MIN_MTU_SIZE = 23
@@ -40,6 +37,6 @@ class Constants {
         const val MIN_SCORE = 0
         const val MAX_SCORE = 99
 
-        const val MAX_OPS_QUEUE_SIZE = 10
+        const val MAX_OPS_QUEUE_SIZE = 20
     }
 }
