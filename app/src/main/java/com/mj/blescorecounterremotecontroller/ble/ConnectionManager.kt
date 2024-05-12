@@ -1,8 +1,4 @@
-/**
- * Based on https://github.com/PunchThrough/ble-starter-android
- */
-
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.ble
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -15,6 +11,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,13 +24,15 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
-
+/**
+ * Based on https://github.com/PunchThrough/ble-starter-android
+ */
 object ConnectionManager {
 
     const val TIMEOUT_CONNECT_MS = 1000L
     const val TIMEOUT_MTU_REQUEST_MS = 1000L
     const val TIMEOUT_DISCONNECT_MS = 1000L
-    const val TIMEOUT_CHAR_WRITE_MS = 300L
+    const val TIMEOUT_CHAR_WRITE_MS = 500L
 
     private var listeners: MutableSet<WeakReference<ConnectionEventListener>> = ConcurrentHashMap.newKeySet()
     private val deviceGattMap = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
@@ -94,8 +93,10 @@ object ConnectionManager {
 
     fun requestMtu(device: BluetoothDevice, mtu: Int) {
         if (device.isConnected()) {
-            enqueueOperation(MtuRequest(device,
-                mtu.coerceIn(Constants.GATT_MIN_MTU_SIZE, Constants.GATT_MAX_MTU_SIZE)))
+            enqueueOperation(
+                MtuRequest(device,
+                mtu.coerceIn(Constants.GATT_MIN_MTU_SIZE, Constants.GATT_MAX_MTU_SIZE))
+            )
         } else {
             Timber.e("Not connected to ${device.address}, " +
                     "cannot request MTU update!")

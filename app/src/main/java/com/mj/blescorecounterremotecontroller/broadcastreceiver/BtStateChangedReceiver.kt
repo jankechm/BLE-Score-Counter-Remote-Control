@@ -6,8 +6,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.mj.blescorecounterremotecontroller.ble.toBondStateDescription
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
-import com.mj.blescorecounterremotecontroller.toBondStateDescription
 import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap

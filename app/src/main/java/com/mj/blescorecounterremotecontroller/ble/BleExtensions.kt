@@ -1,12 +1,16 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.ble
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import com.mj.blescorecounterremotecontroller.Constants
 import timber.log.Timber
 import java.util.UUID
 
+/**
+ * Taken from https://github.com/PunchThrough/ble-starter-android
+ */
 fun BluetoothGatt.printGattTable() {
     if (services.isEmpty()) {
         Timber.i("No service and characteristic available, call discoverServices() first?")

@@ -21,13 +21,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.mj.blescorecounterremotecontroller.BLEDevicesAdapter
-import com.mj.blescorecounterremotecontroller.BLEScanner
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
-import com.mj.blescorecounterremotecontroller.ConnectionManager
-import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
+import com.mj.blescorecounterremotecontroller.ble.BLEScanner
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import timber.log.Timber
 

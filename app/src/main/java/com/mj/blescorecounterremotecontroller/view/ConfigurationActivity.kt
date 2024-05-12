@@ -6,13 +6,13 @@ import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.mj.blescorecounterremotecontroller.BleScoreCounterApp
-import com.mj.blescorecounterremotecontroller.ConnectionManager
-import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.Constants
 import com.mj.blescorecounterremotecontroller.R
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager.isConnected
+import com.mj.blescorecounterremotecontroller.data.model.BleDisplayCfg
 import com.mj.blescorecounterremotecontroller.databinding.ActivityConfigurationBinding
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
-import com.mj.blescorecounterremotecontroller.model.BleDisplayCfg
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

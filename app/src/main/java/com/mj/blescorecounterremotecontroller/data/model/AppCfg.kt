@@ -1,4 +1,4 @@
-package com.mj.blescorecounterremotecontroller.model
+package com.mj.blescorecounterremotecontroller.data.model
 
 data class AppCfg (
     var askToBond: Boolean = true,

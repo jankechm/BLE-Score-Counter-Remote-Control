@@ -1,9 +1,12 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.ble
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import java.util.UUID
 
+/**
+ * Taken from https://github.com/PunchThrough/ble-starter-android
+ */
 sealed class BleOperationType {
     abstract val device: BluetoothDevice
 }

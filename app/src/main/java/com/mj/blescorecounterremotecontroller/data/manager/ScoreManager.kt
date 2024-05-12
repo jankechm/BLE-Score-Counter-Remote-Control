@@ -1,6 +1,7 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.data.manager
 
-import com.mj.blescorecounterremotecontroller.model.Score
+import com.mj.blescorecounterremotecontroller.Constants
+import com.mj.blescorecounterremotecontroller.data.model.Score
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,4 +1,4 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.view
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.mj.blescorecounterremotecontroller.R
 
 class BLEDevicesAdapter(
     private val items: List<ScanResult>,

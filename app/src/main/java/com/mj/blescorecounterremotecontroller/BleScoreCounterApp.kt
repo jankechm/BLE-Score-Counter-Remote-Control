@@ -19,8 +19,11 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.mj.blescorecounterremotecontroller.ConnectionManager.isConnected
+import com.mj.blescorecounterremotecontroller.ble.Connect
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager.isConnected
 import com.mj.blescorecounterremotecontroller.broadcastreceiver.BtStateChangedReceiver
+import com.mj.blescorecounterremotecontroller.data.manager.AppCfgManager
 import com.mj.blescorecounterremotecontroller.listener.BtBroadcastListener
 import com.mj.blescorecounterremotecontroller.listener.ConnectionEventListener
 import com.mj.blescorecounterremotecontroller.service.BleService
@@ -136,7 +139,8 @@ class BleScoreCounterApp : Application() {
             onBondStateChanged = { bondState, bleDevice ->
                 if (bondState == BluetoothDevice.BOND_BONDED && bleDevice != null &&
                         !bleDevice.isConnected() &&
-                        ConnectionManager.pendingOperation !is Connect) {
+                        ConnectionManager.pendingOperation !is Connect
+                ) {
                     ConnectionManager.connect(bleDevice, this@BleScoreCounterApp)
                 }
             }

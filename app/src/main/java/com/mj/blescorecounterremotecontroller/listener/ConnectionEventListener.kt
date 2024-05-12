@@ -4,9 +4,12 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import com.mj.blescorecounterremotecontroller.ConnectionManager
+import com.mj.blescorecounterremotecontroller.ble.ConnectionManager
 
-/** A listener containing callback methods to be registered with [ConnectionManager].*/
+/**
+ * A listener containing callback methods to be registered with [ConnectionManager].
+ * Based on https://github.com/PunchThrough/ble-starter-android
+ */
 class ConnectionEventListener {
     var onConnect: ((BluetoothDevice) -> Unit)? = null
     var onDisconnect: ((BluetoothDevice) -> Unit)? = null

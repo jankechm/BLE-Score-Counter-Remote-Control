@@ -1,4 +1,4 @@
-package com.mj.blescorecounterremotecontroller.model
+package com.mj.blescorecounterremotecontroller.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

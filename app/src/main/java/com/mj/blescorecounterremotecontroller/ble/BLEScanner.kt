@@ -1,4 +1,4 @@
-package com.mj.blescorecounterremotecontroller
+package com.mj.blescorecounterremotecontroller.ble
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.widget.Toast
+import com.mj.blescorecounterremotecontroller.Constants
 import timber.log.Timber
 
 class BLEScanner(private var btAdapter: BluetoothAdapter?, private var scanCallback: ScanCallback) {

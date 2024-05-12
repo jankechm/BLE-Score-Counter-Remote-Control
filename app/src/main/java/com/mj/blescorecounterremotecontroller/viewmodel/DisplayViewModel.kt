@@ -1,7 +1,7 @@
 package com.mj.blescorecounterremotecontroller.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.mj.blescorecounterremotecontroller.ScoreManager
+import com.mj.blescorecounterremotecontroller.data.manager.ScoreManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
