@@ -1,20 +1,22 @@
 <resources>
     <string name="app_name">BLE Score Counter Remote Controller</string>
+
+    <!-- Bluetooth dialog fragment views -->
     <string name="scan_btn_text">Start Scan</string>
     <string name="connect_btn_text">Connect</string>
     <string name="disconnect_btn_text">Disconnect</string>
-    <string name="return_btn_text">Return</string>
     <string name="found_devices_content_desc">Found Devices</string>
     <string name="bt_device_name">Name: %1$s</string>
     <string name="bt_device_mac_address">MAC address: %1$s</string>
-    <!--    <string name="ok_btn_text">OK</string>-->
-    <!--    <string name="increment_txt">+1</string>-->
-    <!--    <string name="decrement_txt">-1</string>-->
-    <string name="settings_title">Settings</string>
+
+    <!-- Top app bar views -->
     <string name="top_app_bar_title">BLE Score Counter</string>
-    <string name="reset_btn_txt">0:0</string>
     <string name="bluetooth_title">Bluetooth</string>
-    <!--    <string name="increment_decrement_txt">±1</string>-->
+    <string name="encryption_title">Encrypted communication</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Main Activity views -->
+    <string name="reset_btn_txt">0:0</string>
     <string name="cancel_content_desc">Cancel</string>
     <string name="ok_content_desc">OK</string>
     <string name="move_score_content_desc">Move Score</string>
@@ -23,34 +25,47 @@
     <string name="increment_txt">+1</string>
     <string name="score_direction_1_content_desc">Score direction 1</string>
     <string name="score_direction_2_content_desc">Score direction 2</string>
-    <string name="encryption_title">Encrypted communication</string>
+    <string name="all_leds_on_desc">All LEDs on</string>
+
+    <!-- Configuration Activity views -->
     <string name="bright_slider_desc">Brightness slider</string>
     <string name="brightness_text">Brightness</string>
-    <string name="ok_btn_text">OK</string>
-    <string name="persist_config_btn_text">Persist</string>
     <string name="show_score_switch_text">Show Score</string>
     <string name="show_date_switch_text">Show Date</string>
     <string name="show_time_switch_text">Show Time</string>
     <string name="alternate_text_rb_text">Alternate Text</string>
     <string name="scroll_text_rb_text">Scroll Text</string>
-    <string name="all_leds_on_desc">All LEDs on</string>
+    <string name="persist_config_btn_text">Persist</string>
+    <string name="return_btn_text">Return</string>
+
+    <!-- Foreground Service -->
     <string name="ble_service_desc">A service which handles communication between a smartwatch and
         the score counter</string>
+
+    <!-- Close app dialog -->
     <string name="close_app_dialog_title">Close application?</string>
     <string name="close_app_dialog_msg">Do you really want to close the app?</string>
     <string name="close_app_dialog_positive_btn">Yes</string>
     <string name="close_app_dialog_negative_btn">No</string>
+
+    <!-- Bluetooth permissions request rationale -->
     <string name="bt_perms_rationale_title">Bluetooth permission required</string>
     <string name="bt_perms_rationale_msg">Starting from Android 12, the system requires apps to be granted Bluetooth access in order to scan for and connect to BLE devices.</string>
     <string name="bt_perms_rationale_positive_btn">Ask for permissions again</string>
     <string name="bt_perms_rationale_negative_btn">Cancel</string>
+
+    <!-- Notifications permissions request rationale -->
     <string name="notifications_perms_rationale_title">Notifications permission required</string>
     <string name="notifications_perms_rationale_msg">The system requires apps to be granted notifications permission in order to display a notification for the running foreground service which handles communication with a smartwatch. If you don\'t allow the permission, the service can run, but the notification won\'t be displayed.</string>
     <string name="notifications_perms_rationale_positive_btn">Ask for permissions again</string>
     <string name="notifications_perms_rationale_negative_btn">Cancel</string>
+
+    <!-- Alert for permanently denied Bluetooth permissions -->
     <string name="permanently_denied_bt_perms_title">Bluetooth permissions were permanently denied!</string>
     <string name="permanently_denied_bt_perms_msg">Please, navigate to App Settings and manually grant Bluetooth permissions to allow connection to BLE Score Counter.</string>
     <string name="permanently_denied_bt_perms_positive_btn">OK</string>
+
+    <!-- Alert for permanently denied Notifications permissions -->
     <string name="permanently_denied_notifications_perms_title">Notifications permission was permanently denied!</string>
     <string name="permanently_denied_notifications_perms_msg">If you change your mind and want the notification to be displayed, please, navigate to App Settings and manually grant Notifications permission to allow a foreground service notification to be displayed.</string>
     <string name="permanently_denied_notifications_perms_positive_btn">OK</string>
