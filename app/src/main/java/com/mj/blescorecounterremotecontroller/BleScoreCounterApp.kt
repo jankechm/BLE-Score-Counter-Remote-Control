@@ -248,7 +248,8 @@ class BleScoreCounterApp : Application() {
         shouldTryConnect = true
 
         delay(initialDelayMillis)
-        while (shouldTryConnect && btAdapter != null && btAdapter!!.isEnabled && !isShuttingDown) {
+        while (btAdapter != null && btAdapter!!.isEnabled && hasBtPermissions() &&
+                shouldTryConnect && !isShuttingDown) {
             if (ConnectionManager.pendingOperation !is Connect) {
                 ConnectionManager.connect(bleDevice, this@BleScoreCounterApp)
             }
