@@ -92,8 +92,6 @@ class BleScoreCounterApp : Application() {
                 manuallyDisconnected = false
                 shouldTryConnect = false
 
-
-
                 // TODO start only if btDevice is a smartwatch
                 val intent = Intent(this@BleScoreCounterApp, BleService::class.java)
                 startForegroundService(intent)
@@ -110,8 +108,8 @@ class BleScoreCounterApp : Application() {
                 }
                 // TODO should stopService only when the bleDevice is a smartwatch?
                 else {
-//                    val intent = Intent(this@BleScoreCounterApp, BleService::class.java)
-//                    stopService(intent)
+                    val intent = Intent(this@BleScoreCounterApp, BleService::class.java)
+                    stopService(intent)
                 }
 
                 handler.post {

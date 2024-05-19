@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity() {
     private val btStateChangedReceiver = BtStateChangedReceiver()
 
     private var btPermissionsPermanentlyDenied = false
+    private var notificationPermissionPermanentlyDenied = false
 
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var mainBinding: ActivityMainBinding
@@ -307,6 +308,8 @@ class MainActivity : AppCompatActivity() {
 
         app.isShuttingDown = false
 
+        handleNotificationPermission()
+
         onBackPressedDispatcher.addCallback(onBackPressedCallback)
     }
 
@@ -424,6 +427,7 @@ class MainActivity : AppCompatActivity() {
                 else {
                     when {
                         containsPermanentDenial -> {
+                            this.notificationPermissionPermanentlyDenied = true
                             this.showStepsToManuallyEnableNotificationsPermissions()
                         }
                         containsDenial -> {
@@ -456,6 +460,19 @@ class MainActivity : AppCompatActivity() {
         else {
             Toast.makeText(this, "Bluetooth Low Energy is not supported on this " +
                     "device", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun handleNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (app.hasNotificationsPermission()) {
+                notificationPermissionPermanentlyDenied = false
+            }
+            else {
+                if (!notificationPermissionPermanentlyDenied) {
+                    app.requestNotificationsPermission(this)
+                }
+            }
         }
     }
 

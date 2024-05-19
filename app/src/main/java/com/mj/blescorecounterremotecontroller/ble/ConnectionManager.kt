@@ -197,7 +197,7 @@ object ConnectionManager {
     private fun enqueueOperation(operation: BleOperationType) {
         if (operationQueue.size < Constants.MAX_OPS_QUEUE_SIZE) {
             Timber.i("Adding ${operation::class.java.simpleName} operation to the queue." +
-                    "Queue size: ${operationQueue.size}")
+                    " Queue size: ${operationQueue.size}")
             operationQueue.add(operation)
             if (pendingOperation == null) {
                 doNextOperation()
